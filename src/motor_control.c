@@ -1,8 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/socket.h>
 #include <unistd.h>
 #include <bluetooth/sdp.h>
 #include <bluetooth/sdp_lib.h>
@@ -10,6 +7,8 @@
 #include "../include/libbluetooth.h"
 #include "../include/libio.h"
 #include "../include/libpwm.h"
+
+#define INCREMENT			1000
 
 int main()
 {
@@ -35,19 +34,19 @@ int main()
 
 	if (motor2 == NULL)
 	{
-		perror("An error occurred when opening the motor1\n");
+		perror("An error occurred when opening the motor2\n");
 		exit(1);
 	}
 
 	if (motor3 == NULL)
 	{
-		perror("An error occurred when opening the motor1\n");
+		perror("An error occurred when opening the motor3\n");
 		exit(1);
 	}
 
 	if (motor4 == NULL)
 	{
-		perror("An error occurred when opening the motor1\n");
+		perror("An error occurred when opening the motor4\n");
 		exit(1);
 	}
 
@@ -74,7 +73,7 @@ int main()
 				rewind(motor2);
 				rewind(motor3);
 				rewind(motor4);
-				speed += 1000;
+				speed += INCREMENT;
 				sprintf(speed_c, "%ld", speed);
 				fputs(speed_c, motor1);
 				fputs(speed_c, motor2);
@@ -87,7 +86,7 @@ int main()
 				rewind(motor2);
 				rewind(motor3);
 				rewind(motor4);
-				speed -= 1000;
+				speed -= INCREMENT;
 				sprintf(speed_c, "%ld", speed);
 				fputs(speed_c, motor1);
 				fputs(speed_c, motor2);
