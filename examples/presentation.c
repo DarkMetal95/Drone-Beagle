@@ -90,7 +90,7 @@ int main()
 		client = bt_server_initiate(s, &rem_addr);
 		loop = 1;
 
-		while(loop)
+		while(loop >= 0)
 		{
 			sensors_get_values(i2c_device, &sv);
 
@@ -120,9 +120,9 @@ int main()
 			refresh();
 
 			sprintf(data, "%f",kalman_x.angle);
-			write(client, data, strlen(data));
+			write(client, data, sizeof(data));
 			sprintf(data, "%f",kalman_y.angle);
-			write(client, data, strlen(data));
+			loop = write(client, data, sizeof(data));
 
 			usleep(2000);
 		}	
