@@ -30,7 +30,7 @@ double dt_time;
 struct timeval t_start, t_end, dt;
 Sensors_values sv;
 Kalman_instance kalman_x, kalman_y;
-int x_angle_cons, y_angle_cons, z_height_cons;
+int x_angle_cons, y_angle_cons, z_height_cons, z_t_height;
 int kp, ki, kd;
 int commande_x, commande_y;
 long int speed1, speed2, speed3, speed4;
@@ -91,7 +91,7 @@ void *PID()
 	{
 		pthread_mutex_lock(&kalman_sync_mutex2);
 
-		errorx = (double)x_angle_cons - kalman_x.angle;
+		errorx = (double)x_angle_cons + kalman_x.angle;
 		sum_errorx += errorx;
 		commande_x = kp * errorx + ki * sum_errorx + kd * (errorx - prev_errorx);
 		prev_errorx = errorx;
@@ -121,20 +121,40 @@ void *PID()
 
 void motor_control()
 {
-	speed1 += commande_x;
-	speed4 += commande_x;
-	speed2 -= commande_x;
-	speed3 -= commande_x;
-
-	speed1 -= commande_y;
-	speed2 -= commande_y;
-	speed3 += commande_y;
+	speed1 += commande_y;
 	speed4 += commande_y;
+	speed2 -= commande_y;
+	speed3 -= commande_y;
 
-	speed1 += z_height_cons*20;
-	speed2 += z_height_cons*20;
-	speed3 += z_height_cons*20;
-	speed4 += z_height_cons*20;
+	speed1 -= commande_x;
+	speed2 -= commande_x;
+	speed3 += commande_x;
+	speed4 += commande_x;
+
+	speed1 += z_height_cons;
+	speed2 += z_height_cons;
+	speed3 += z_height_cons;
+	speed4 += z_height_cons;
+	
+	z_t_height +=z_height_cons;
+	
+	if(speed1 < 1000000 || z_t_height < 1000)
+		speed1 = 1000000;
+	if(speed2 < 1000000 || z_t_height < 1000)
+		speed2 = 1000000;
+	if(speed3 < 1000000 || z_t_height < 1000)
+		speed3 = 1000000;
+	if(speed4 < 1000000 || z_t_height < 1000)
+		speed4 = 1000000;
+		
+	if(speed1 > 2000000)
+		speed1 = 2000000;
+	if(speed2 > 2000000)
+		speed2 = 2000000;
+	if(speed3 > 2000000)
+		speed3 = 2000000;
+	if(speed4 > 2000000)
+		speed4 = 2000000;
 
 	set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
 				  motor3, motor4);
@@ -250,10 +270,11 @@ int main()
 	
 	x_angle_cons = 0;
 	y_angle_cons = 0;
-
-	kp = 300;
-	ki = 6;
-	kd = 500;
+	z_height_cons = 0;
+	z_t_height = 0;
+	kp = 1;
+	ki = 1;
+	kd = 1;
 
 	/*
 	 * Init threads
@@ -286,22 +307,22 @@ int main()
 				read(client, data, sizeof(data));
 
 				if(data[1] <= 9)
-					x_angle_cons = -((data[0]*4)*data[1])/9;
+					y_angle_cons = -((data[0]*4)*data[1])/9;
 				else if(data[1] > 9  && data[1] <= 18)
-					x_angle_cons =  ((data[0]*4)*(data[1]-18))/9;
+					y_angle_cons =  ((data[0]*4)*(data[1]-18))/9;
 				else if(data[1] > 18 && data[1] <= 27)
-					x_angle_cons =  ((data[0]*4)*(data[1]-18))/9;
+					y_angle_cons =  ((data[0]*4)*(data[1]-18))/9;
 				else if(data[1] > 27 && data[1] <= 35)
-					x_angle_cons = -((data[0]*4)*(data[1]-35))/9;
+					y_angle_cons = -((data[0]*4)*(data[1]-35))/9;
 
 				if(data[1] <= 9)
-					y_angle_cons = -((data[0]*4)*(data[1]-9 ))/9;
+					x_angle_cons = -((data[0]*4)*(data[1]-9 ))/9;
 				else if(data[1] > 9  && data[1] <= 18)
-					y_angle_cons = -((data[0]*4)*(data[1]-9 ))/9;
+					x_angle_cons = -((data[0]*4)*(data[1]-9 ))/9;
 				else if(data[1] > 18 && data[1] <= 27)
-					y_angle_cons =  ((data[0]*4)*(data[1]-27))/9;
+					x_angle_cons =  ((data[0]*4)*(data[1]-27))/9;
 				else if(data[1] > 27 && data[1] <= 35)
-					y_angle_cons =  ((data[0]*4)*(data[1]-27))/9;
+					x_angle_cons =  ((data[0]*4)*(data[1]-27))/9;
 
 				if(data[3] <= 9)
 					z_height_cons = -((data[2]*4)*(data[3]-9 ))/9;
