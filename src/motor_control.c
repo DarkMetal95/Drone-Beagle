@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <bluetooth/sdp.h>
-#include <bluetooth/sdp_lib.h>
+#include <bluetooth/bluetooth.h>
+#include <bluetooth/rfcomm.h>
 
 #include "../include/libbluetooth.h"
 #include "../include/libio.h"
@@ -13,6 +13,7 @@
 int main()
 {
 	int end_b = 1, end_w = 0, shut = 1;
+	int s, client;
 	char speed_c[] = "PWM_SPEED";
 	long int speed = (long int) PWM_SPEED;
 	char key[1] = {0x00};
@@ -20,6 +21,8 @@ int main()
 	FILE *motor2 = NULL;
 	FILE *motor3 = NULL;
 	FILE *motor4 = NULL;
+	sdp_session_t *session = NULL;
+	sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };
 
 	motor1 = fopen(PWM_DUTY_FILE1, "w");
 	motor2 = fopen(PWM_DUTY_FILE2, "w");
@@ -50,7 +53,8 @@ int main()
 		exit(1);
 	}
 
-	bt_server_register();
+	session = bt_register_service();
+	s = bt_server_register(&loc_addr);
 
 	io_changemode(IO_MODE_RAW);
 
@@ -62,7 +66,7 @@ int main()
 
 	while (shut)
 	{
-		bt_server_initiate();
+		client = bt_server_initiate(s, &rem_addr);
 
 		while((end_b) && (end_w >= 0))
 		{
@@ -126,7 +130,7 @@ int main()
 	fclose(motor3);
 	fclose(motor4);
 
-	end();
+	bt_end_session(s, session);
 
 	io_changemode(IO_MODE_COOKED);
 

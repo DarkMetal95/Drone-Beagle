@@ -1,9 +1,27 @@
-extern int s, client;
-extern sdp_session_t *session;
-extern struct sockaddr_rc loc_addr, rem_addr;
-extern socklen_t opt;
+#include <bluetooth/sdp.h>
+#include <bluetooth/sdp_lib.h>
 
-sdp_session_t *register_service();
-void bt_server_register();
-void bt_server_initiate();
-void end();
+/* 
+ * Defines
+ */
+
+#define BT_SERVICE_NAME			"Drone Remote"
+#define BT_SERVICE_DESC			"Remote control service"
+#define BT_SERVICE_PROV			"P0lyDr0n3"
+
+#define BT_RFCOMM_CHAN			11
+
+/* 
+ * Structures
+ */
+
+typedef struct sockaddr_rc sockaddr_rc;
+
+/* 
+ * Prototypes
+ */
+
+sdp_session_t *bt_register_service();
+int bt_server_register(sockaddr_rc * loc_addr);
+int bt_server_initiate(int socket, sockaddr_rc * rem_addr);
+void bt_end_session(int socket, sdp_session_t * session);
