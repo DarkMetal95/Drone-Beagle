@@ -93,8 +93,8 @@ int main()
 
 		kalman_compute_new_angle(&kalman_x, roll, dt_time);
 
-		mvprintw(0, 0, "pitch : %f", kalman_y.angle);
-		mvprintw(1, 0, "roll : %f", kalman_x.angle);
+		mvprintw(0, 0, "roll : %f", kalman_y.angle);
+		mvprintw(1, 0, "pitch : %f", -kalman_x.angle);
 		refresh();
 
 		usleep(2000);
