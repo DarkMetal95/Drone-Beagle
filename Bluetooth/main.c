@@ -11,6 +11,9 @@
 #include <bluetooth/rfcomm.h>
 #include <bluetooth/sdp.h>
 #include <bluetooth/sdp_lib.h>
+#include <time.h>
+
+#define FREQ 30
 
 int buf[2];
 int i2c;
@@ -21,6 +24,8 @@ socklen_t opt = sizeof(rem_addr);
 
 void setup_i2c()
 {
+	int sample;
+
 	char *filename = "/dev/i2c-1";
 	if ((i2c = open(filename, O_RDWR)) < 0) {
     		perror("Failed to open the i2c bus");
@@ -29,7 +34,18 @@ void setup_i2c()
  		printf("Failed to acquire bus access and/or talk to slave.\n");
     		exit(1);}
 	
+	sample = (1000 / FREQ) - 1;
+
 	buf[0] = 0x6B; buf[1] = 0x00;
+	write(i2c, buf, 2);
+
+	buf[0] = 0x1A; buf[1] = 0x01;
+	write(i2c, buf, 2);
+
+	buf[0] = 0x1B; buf[1] = 0x08;
+	write(i2c, buf, 2);
+
+	buf[0] = 0x19; buf[1] = sample;
 	write(i2c, buf, 2);
 }
 
@@ -183,12 +199,15 @@ void end()
 }
  
 int main()
-{
-	int i = 0;	
+{	
+	clock_t start, stop, prev;
+	double start_time, stop_time, prev_time, sample_frequency;
 	char data_char[6];
 	int accx, accy, accz;
 	int gyrox, gyroy, gyroz;
 	int flag = 0;
+
+	int i = 0;
 
 	setup_i2c();
 	bt_server_register();
@@ -202,6 +221,8 @@ int main()
 	
 		while( flag >= 0)
 		{
+			start = clock();
+
 			buf[0] = 0x3b;
 			write(i2c, buf, 1);
 			read(i2c, buf, 1);
@@ -278,14 +299,25 @@ int main()
 			snprintf(data_char, sizeof(data_char), "%d", gyroz);
 			flag = write(client, data_char, 6);
 
-			usleep(500000);
+			//prev = stop;
+			stop = clock();
 
+			start_time = (double) start / (CLOCKS_PER_SEC / 1000000);
+			stop_time  = (double) stop  / (CLOCKS_PER_SEC / 1000000);
+			//prev_time  = (double) prev  / (CLOCKS_PER_SEC / 1000000);
+
+			usleep( ((1/FREQ)*1000000)-(stop_time-start_time));
 			i++;
+			printf("Paquets: %d\r", i);
+			//sample_frequency = 1/((stop_time/1000000)-(prev_time/1000000));
+
+			//printf("Start: %f\tStop: %f\t Prev: %f\t Sampling frequency: %f\n", start_time, stop_time, prev_time, sample_frequency);
 		}
 		
+		i = 0;
 		flag = 0;
 		close(client);
-		printf("Disconnected\n");
+		printf("\nDisconnected\n");
 		
 	}
 	end();
