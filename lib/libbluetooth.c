@@ -16,7 +16,6 @@ socklen_t opt = sizeof(rem_addr);
 
 sdp_session_t *register_service()
 {
-	int err = 0;
 	uint32_t svc_uuid_int[] = { 0, 0, 0, 0 };
 	uint8_t rfcomm_channel = 11;
 	const char *service_name = "Drone Remote";
@@ -68,7 +67,7 @@ sdp_session_t *register_service()
 	// disconnect
 	session = sdp_connect(BDADDR_ANY, BDADDR_LOCAL, SDP_RETRY_IF_BUSY);
 	/* if (session == NULL) perror("Unable to open SDK"); else */
-	err = sdp_record_register(session, record, 0);
+	sdp_record_register(session, record, 0);
 
 	// cleanup
 	// sdp_data_free( channel );

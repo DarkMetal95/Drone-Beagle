@@ -12,19 +12,19 @@
 
 int main()
 {
-	int end_b = 1;
+	int end_b = 1, end_w = 0, shut = 1;
 	char speed_c[] = "PWM_SPEED";
-	long int speed = PWM_SPEED;
-	char key = 0x00;
+	long int speed = (long int) PWM_SPEED;
+	char key[1] = {0x00};
 	FILE *motor1 = NULL;
 	FILE *motor2 = NULL;
 	FILE *motor3 = NULL;
 	FILE *motor4 = NULL;
 
-	motor1 = fopen(PWM_DUTY_FILE, "w");
-	motor2 = fopen(PWM_DUTY_FILE, "w");
-	motor3 = fopen(PWM_DUTY_FILE, "w");
-	motor4 = fopen(PWM_DUTY_FILE, "w");
+	motor1 = fopen(PWM_DUTY_FILE1, "w");
+	motor2 = fopen(PWM_DUTY_FILE2, "w");
+	motor3 = fopen(PWM_DUTY_FILE3, "w");
+	motor4 = fopen(PWM_DUTY_FILE4, "w");
 
 	if (motor1 == NULL)
 	{
@@ -54,20 +54,21 @@ int main()
 
 	io_changemode(IO_MODE_RAW);
 
-	fputs("PWM_SPEED", motor1);
-	fputs("PWM_SPEED", motor2);
-	fputs("PWM_SPEED", motor3);
-	fputs("PWM_SPEED", motor4);
+	sprintf(speed_c, "%ld", (long int) PWM_SPEED);
+	fputs(speed_c, motor1);
+	fputs(speed_c, motor2);
+	fputs(speed_c, motor3);
+	fputs(speed_c, motor4);
 
-	while (end_b)
+	while (shut)
 	{
 		bt_server_initiate();
 
-		while(end_b)
+		while((end_b) && (end_w >= 0))
 		{
-			read(s, (char*) &key, sizeof(key));
-
-			if (key == 'z')
+			read(client, key, 1);
+			printf("%c\r", key[0]);
+			if (*key == 'z')
 			{
 				rewind(motor1);
 				rewind(motor2);
@@ -80,7 +81,7 @@ int main()
 				fputs(speed_c, motor3);
 				fputs(speed_c, motor4);
 			}
-			else if (key == 's')
+			else if (*key == 's')
 			{
 				rewind(motor1);
 				rewind(motor2);
@@ -93,29 +94,43 @@ int main()
 				fputs(speed_c, motor3);
 				fputs(speed_c, motor4);
 			}
-			else
+			else if (*key == 'k')
 			{
 				end_b = 0;
 			}
+			else if (*key == 'l')
+			{
+				shut = 0;
+			}
+
+			end_w = write(client, speed_c, 10);
 		}
+		end_w = 0;
+		end_b = 1;
 		close(client);
 	}
-
-	end();
 
 	rewind(motor1);
 	rewind(motor2);
 	rewind(motor3);
 	rewind(motor4);
-	fputs("PWM_SPEED", motor1);
-	fputs("PWM_SPEED", motor2);
-	fputs("PWM_SPEED", motor3);
-	fputs("PWM_SPEED", motor4);
+	sprintf(speed_c, "%ld", (long int) PWM_SPEED);
+	speed = (long int) PWM_SPEED;
+	fputs(speed_c, motor1);
+	fputs(speed_c, motor2);
+	fputs(speed_c, motor3);
+	fputs(speed_c, motor4);
+
 	fclose(motor1);
 	fclose(motor2);
 	fclose(motor3);
 	fclose(motor4);
+
+	end();
+
 	io_changemode(IO_MODE_COOKED);
+
+	system("shutdown now\n\r");
 
 	return 0;
 }
