@@ -5,6 +5,9 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
+#define PWM_DUTY_FILE		"/sys/devices/ocp.3/pwm_test_P8_13.15/duty"
+#define PWM_SPEED			1160000
+
 void changemode(int dir)
 {
 	static struct termios oldt, newt;
@@ -37,23 +40,23 @@ int kbhit(void)
 
 int main()
 {
-	int i = 0;
 	int end = 1;
-	char speed_c[] = "1160000";
-	long int speed = 1160000;
+	char speed_c[] = "PWM_SPEED";
+	long int speed = PWM_SPEED;
 	char key = 0x00;
-	FILE *fichier = NULL;
+	FILE *file = NULL;
 
-	fichier = fopen("/sys/devices/ocp.3/pwm_test_P8_13.15/duty", "w");
-	if (fichier == NULL)
+	file = fopen(PWM_DUTY_FILE, "w");
+
+	if (file == NULL)
 	{
-		printf("Erreur d'ouverture du fichier\n");
-		return 0;
+		perror("An error occurred when opening the file\n");
+		exit(1);
 	}
 
 	changemode(1);
 
-	fputs("1160000", fichier);
+	fputs("PWM_SPEED", file);
 
 	while (end)
 	{
@@ -62,25 +65,26 @@ int main()
 
 		if (key == 'z')
 		{
-			rewind(fichier);
+			rewind(file);
 			speed += 1000;
-			sprintf(speed_c, "%d", speed);
-			fputs(speed_c, fichier);
+			sprintf(speed_c, "%ld", speed);
+			fputs(speed_c, file);
 		}
 		else if (key == 's')
 		{
-			rewind(fichier);
+			rewind(file);
 			speed -= 1000;
-			sprintf(speed_c, "%d", speed);
-			fputs(speed_c, fichier);
+			sprintf(speed_c, "%ld", speed);
+			fputs(speed_c, file);
 		}
 		else
 			end = 0;
 	}
 
-	rewind(fichier);
-	fputs("1160000", fichier);
-	fclose(fichier);
+	rewind(file);
+	fputs("PWM_SPEED", file);
+	fclose(file);
 	changemode(0);
+
 	return 0;
 }
