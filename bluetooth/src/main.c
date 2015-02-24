@@ -20,10 +20,7 @@ int i2c;
 int s, client;
 sdp_session_t *session;
 
-struct sockaddr_rc loc_addr = { 0 }, rem_addr =
-
-{
-0};
+struct sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };
 
 socklen_t opt = sizeof(rem_addr);
 
