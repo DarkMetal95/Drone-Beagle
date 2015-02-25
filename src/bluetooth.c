@@ -61,17 +61,19 @@ void setup_i2c()
 
 sdp_session_t *register_service()
 {
+	int err = 0;
 	uint32_t svc_uuid_int[] = { 0, 0, 0, 0 };
 	uint8_t rfcomm_channel = 11;
 	const char *service_name = "Drone Remote";
 	const char *service_dsc = "Remote control service";
 	const char *service_prov = "P0lyDr0n3";
+	sdp_session_t *session = 0;
 
 	uuid_t root_uuid, l2cap_uuid, rfcomm_uuid, svc_uuid;
 	sdp_list_t *l2cap_list = 0,
 		*rfcomm_list = 0,
 		*root_list = 0, *proto_list = 0, *access_proto_list = 0;
-	sdp_data_t *channel = 0, *psm = 0;
+	sdp_data_t *channel = 0;
 
 	sdp_record_t *record = sdp_record_alloc();
 
@@ -106,9 +108,6 @@ sdp_session_t *register_service()
 
 	// set the name, provider, and description
 	sdp_set_info_attr(record, service_name, service_prov, service_dsc);
-
-	int err = 0;
-	sdp_session_t *session = 0;
 
 	// connect to the local SDP server, register the service record, and 
 	// disconnect
@@ -170,8 +169,6 @@ void list_bt_partner()
 
 void bt_server_register()
 {
-	int bytes_read;
-
 	// allocate socket
 	session = register_service();
 	s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
@@ -206,8 +203,8 @@ void end()
 
 int main()
 {
-	clock_t start, stop, prev;
-	double start_time, stop_time, prev_time, sample_frequency;
+	clock_t start, stop;
+	double start_time, stop_time;
 	char data_char[6];
 	int accx, accy, accz;
 	int gyrox, gyroy, gyroz;

@@ -1,42 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <termios.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/time.h>
 
-#define PWM_DUTY_FILE		"/sys/devices/ocp.3/pwm_test_P8_13.15/duty"
-#define PWM_SPEED			1160000
-
-void changemode(int dir)
-{
-	static struct termios oldt, newt;
-
-	if (dir == 1)
-	{
-		tcgetattr(STDIN_FILENO, &oldt);
-		newt = oldt;
-		newt.c_lflag &= ~(ICANON | ECHO);
-		tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-	}
-	else
-		tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-}
-
-int kbhit(void)
-{
-	struct timeval tv;
-	fd_set rdfs;
-
-	tv.tv_sec = 0;
-	tv.tv_usec = 0;
-
-	FD_ZERO(&rdfs);
-	FD_SET(STDIN_FILENO, &rdfs);
-
-	select(STDIN_FILENO + 1, &rdfs, NULL, NULL, &tv);
-	return FD_ISSET(STDIN_FILENO, &rdfs);
-}
+#include "../include/libio.h"
+#include "../include/libpwm.h"
 
 int main()
 {
@@ -54,13 +23,13 @@ int main()
 		exit(1);
 	}
 
-	changemode(1);
+	io_changemode(IO_MODE_RAW);
 
 	fputs("PWM_SPEED", file);
 
 	while (end)
 	{
-		while (!kbhit());
+		while (!io_kbhit());
 		key = getchar();
 
 		if (key == 'z')
@@ -84,7 +53,7 @@ int main()
 	rewind(file);
 	fputs("PWM_SPEED", file);
 	fclose(file);
-	changemode(0);
+	io_changemode(IO_MODE_COOKED);
 
 	return 0;
 }
