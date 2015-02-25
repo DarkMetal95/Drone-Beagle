@@ -20,7 +20,7 @@ void io_changemode(int dir)
 		tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 }
 
-/*
+/* 
  * Returns true when a key is pressed
  */
 int io_kbhit(void)

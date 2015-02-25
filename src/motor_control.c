@@ -1,11 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/time.h>
 
 #include "../include/libio.h"
 #include "../include/libpwm.h"
+
+#define INCREMENT			1000
 
 int main()
 {
@@ -35,14 +34,14 @@ int main()
 		if (key == 'z')
 		{
 			rewind(file);
-			speed += 1000;
+			speed += INCREMENT;
 			sprintf(speed_c, "%ld", speed);
 			fputs(speed_c, file);
 		}
 		else if (key == 's')
 		{
 			rewind(file);
-			speed -= 1000;
+			speed -= INCREMENT;
 			sprintf(speed_c, "%ld", speed);
 			fputs(speed_c, file);
 		}
