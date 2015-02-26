@@ -12,7 +12,7 @@ EXEC=motor_control
 
 all: setup $(EXEC)
 
-$(EXEC): $(BDIR)/motor_control.o $(BDIR)/libio.o
+$(EXEC): $(BDIR)/motor_control.o $(BDIR)/libio.o $(BDIR)/libbluetooth.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 $(BDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) -o $@ -c $< $(CFLAGS)
