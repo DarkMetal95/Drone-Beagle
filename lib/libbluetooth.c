@@ -9,18 +9,13 @@
 
 #include "../include/libbluetooth.h"
 
-int s, client;
-sdp_session_t *session;
-struct sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };
-socklen_t opt = sizeof(rem_addr);
-
-sdp_session_t *register_service()
+/* 
+ * Initiates session
+ */
+sdp_session_t *bt_register_service()
 {
 	uint32_t svc_uuid_int[] = { 0, 0, 0, 0 };
-	uint8_t rfcomm_channel = 11;
-	const char *service_name = "Drone Remote";
-	const char *service_dsc = "Remote control service";
-	const char *service_prov = "P0lyDr0n3";
+	uint8_t rfcomm_channel = BT_RFCOMM_CHAN;
 	sdp_session_t *session = 0;
 
 	uuid_t root_uuid, l2cap_uuid, rfcomm_uuid, svc_uuid;
@@ -61,7 +56,8 @@ sdp_session_t *register_service()
 	sdp_set_access_protos(record, access_proto_list);
 
 	// set the name, provider, and description
-	sdp_set_info_attr(record, service_name, service_prov, service_dsc);
+	sdp_set_info_attr(record, BT_SERVICE_NAME, BT_SERVICE_PROV,
+					  BT_SERVICE_DESC);
 
 	// connect to the local SDP server, register the service record, and 
 	// disconnect
@@ -79,36 +75,50 @@ sdp_session_t *register_service()
 	return session;
 }
 
-void bt_server_register()
+/* 
+ * Returns socket
+ */
+int bt_server_register(sockaddr_rc * loc_addr)
 {
 	// allocate socket
-	session = register_service();
-	s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
+	int s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
 
 	// bind socket to port 1 of the first available 
 	// local bluetooth adapter
-	loc_addr.rc_family = AF_BLUETOOTH;
-	loc_addr.rc_bdaddr = *BDADDR_ANY;
-	loc_addr.rc_channel = (uint8_t) 1;
-	bind(s, (struct sockaddr *)&loc_addr, sizeof(loc_addr));
+	loc_addr->rc_family = AF_BLUETOOTH;
+	loc_addr->rc_bdaddr = *BDADDR_ANY;
+	loc_addr->rc_channel = (uint8_t) 1;
+	bind(s, (const sockaddr_rc *)loc_addr, sizeof(*loc_addr));
+
+	return s;
 }
 
-void bt_server_initiate()
+/* 
+ * Binds the socket given as parameter and accepts one connection
+ */
+int bt_server_initiate(int socket, sockaddr_rc * rem_addr)
 {
 	char buffer[1024] = { 0 };
+	socklen_t opt = sizeof(*rem_addr);
+
 	// put socket into listening mode
-	listen(s, 1);
+	listen(socket, 1);
 
 	// accept one connection
-	client = accept(s, (struct sockaddr *)&rem_addr, &opt);
+	int client = accept(socket, (struct sockaddr *)&rem_addr, &opt);
 
-	ba2str(&rem_addr.rc_bdaddr, buffer);
+	ba2str(&rem_addr->rc_bdaddr, buffer);
 	fprintf(stderr, "Accepted connection from %s\n", buffer);
 	memset(buffer, 0, sizeof(buffer));
+
+	return client;
 }
 
-void end()
+/* 
+ * Closes socket and session
+ */
+void bt_end_session(int socket, sdp_session_t * session)
 {
-	close(s);
+	close(socket);
 	sdp_close(session);
 }

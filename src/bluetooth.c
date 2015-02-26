@@ -6,65 +6,32 @@
 #include <unistd.h>
 #include <time.h>
 #include <sys/socket.h>
-#include <../include/libbluetooth.h>
+#include <bluetooth/bluetooth.h>
+#include <bluetooth/rfcomm.h>
 
-#define FREQ 30
-
-int i2c;
-int buf[2];
-
-void setup_i2c()
-{
-	int sample;
-
-	char *filename = "/dev/i2c-1";
-	if ((i2c = open(filename, O_RDWR)) < 0)
-	{
-		perror("Failed to open the i2c bus");
-		exit(1);
-	}
-	if (ioctl(i2c, I2C_SLAVE, 0x68) < 0)
-	{
-		printf("Failed to acquire bus access and/or talk to slave.\n");
-		exit(1);
-	}
-
-	sample = (1000 / FREQ) - 1;
-
-	buf[0] = 0x6B;
-	buf[1] = 0x00;
-	write(i2c, buf, 2);
-
-	buf[0] = 0x1A;
-	buf[1] = 0x01;
-	write(i2c, buf, 2);
-
-	buf[0] = 0x1B;
-	buf[1] = 0x08;
-	write(i2c, buf, 2);
-
-	buf[0] = 0x19;
-	buf[1] = sample;
-	write(i2c, buf, 2);
-}
+#include "../include/libbluetooth.h"
+#include "../include/libi2c.h"
 
 int main()
 {
-	clock_t start, stop;
-	double start_time, stop_time;
-	char data_char[6];
-	int accx, accy, accz;
+	int i = 0, flag = 0, i2c;
+	int s, client;
+	int buf[2];
 	int gyrox, gyroy, gyroz;
-	int flag = 0;
+	int accx, accy, accz;
+	char data_char[6];
+	double start_time, stop_time;
+	clock_t start, stop;
+	sdp_session_t *session = NULL;
+	sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };
 
-	int i = 0;
-
-	setup_i2c();
-	bt_server_register();
+	i2c = setup_i2c();
+	session = bt_register_service();
+	s = bt_server_register(&loc_addr);
 
 	while (1)
 	{
-		bt_server_initiate();
+		client = bt_server_initiate(s, &rem_addr);
 
 		while (flag >= 0)
 		{
@@ -157,7 +124,7 @@ int main()
 			stop_time = (double)stop / (CLOCKS_PER_SEC / 1000000);
 			// prev_time = (double) prev / (CLOCKS_PER_SEC / 1000000);
 
-			usleep(((1 / FREQ) * 1000000) - (stop_time - start_time));
+			usleep(((1 / I2C_FREQ) * 1000000) - (stop_time - start_time));
 			i++;
 			printf("Paquets: %d\r", i);
 			// sample_frequency = 1/((stop_time/1000000)-(prev_time/1000000));
@@ -171,6 +138,8 @@ int main()
 		close(client);
 		printf("\nDisconnected\n");
 	}
-	end();
+
+	bt_end_session(s, session);
+
 	return 0;
 }
