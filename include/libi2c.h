@@ -10,4 +10,4 @@
  * Prototypes
  */
 
-int setup_i2c();
+int i2c_setup();

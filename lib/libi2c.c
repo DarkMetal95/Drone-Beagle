@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
 #include <linux/i2c-dev.h>
 
 #include "../include/libi2c.h"
@@ -10,7 +10,7 @@
 /*
  * Returns I2C descriptor of I2C_DEVICE
  */
-int setup_i2c()
+int i2c_setup()
 {
 	int sample, device;
 	int buf[2];

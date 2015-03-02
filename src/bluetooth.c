@@ -11,21 +11,21 @@
 
 #include "../include/libbluetooth.h"
 #include "../include/libi2c.h"
+#include "../include/libsensors.h"
 
 int main()
 {
 	int i = 0, flag = 0, i2c;
 	int s, client;
 	int buf[2];
-	int gyrox, gyroy, gyroz;
-	int accx, accy, accz;
 	char data_char[6];
 	double start_time, stop_time;
 	clock_t start, stop;
+	Sensors_values sensors_values;
 	sdp_session_t *session = NULL;
 	sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };
 
-	i2c = setup_i2c();
+	i2c = i2c_setup();
 	session = bt_register_service();
 	s = bt_server_register(&loc_addr);
 
@@ -37,65 +37,7 @@ int main()
 		{
 			start = clock();
 
-			buf[0] = 0x3b;
-			write(i2c, buf, 1);
-			read(i2c, buf, 1);
-			accx = buf[0] * 256;
-
-			buf[0] = 0x3c;
-			write(i2c, buf, 1);
-			read(i2c, buf, 1);
-			accx += buf[0];
-
-			buf[0] = 0x3d;
-			write(i2c, buf, 1);
-			read(i2c, buf, 1);
-			accy = buf[0] * 256;
-
-			buf[0] = 0x3e;
-			write(i2c, buf, 1);
-			read(i2c, buf, 1);
-			accy += buf[0];
-
-			buf[0] = 0x3f;
-			write(i2c, buf, 1);
-			read(i2c, buf, 1);
-			accz = buf[0] * 256;
-
-			buf[0] = 0x40;
-			write(i2c, buf, 1);
-			read(i2c, buf, 1);
-			accz += buf[0];
-
-			buf[0] = 0x43;
-			write(i2c, buf, 1);
-			read(i2c, buf, 1);
-			gyrox = buf[0] * 256;
-
-			buf[0] = 0x44;
-			write(i2c, buf, 1);
-			read(i2c, buf, 1);
-			gyrox += buf[0];
-
-			buf[0] = 0x45;
-			write(i2c, buf, 1);
-			read(i2c, buf, 1);
-			gyroy = buf[0] * 256;
-
-			buf[0] = 0x46;
-			write(i2c, buf, 1);
-			read(i2c, buf, 1);
-			gyroy += buf[0];
-
-			buf[0] = 0x47;
-			write(i2c, buf, 1);
-			read(i2c, buf, 1);
-			gyroz = buf[0] * 256;
-
-			buf[0] = 0x48;
-			write(i2c, buf, 1);
-			read(i2c, buf, 1);
-			gyroz += buf[0];
+			sensors_get_values(&sensors_values);
 
 			// printf("AccX = %f\t AccY = %f\t AccZ = %f\nGyroX = %f\t GyroY = 
 			// 
@@ -103,18 +45,18 @@ int main()
 			// 
 			// %f\t GyroZ = %f\n\n",accx, accy, accz, gyrox, gyroy, gyroz);
 
-			snprintf(data_char, sizeof(data_char), "%d", accx);
+			snprintf(data_char, sizeof(data_char), "%d", sensors_values.accX);
 			write(client, data_char, 6);
-			snprintf(data_char, sizeof(data_char), "%d", accy);
+			snprintf(data_char, sizeof(data_char), "%d", sensors_values.accY);
 			write(client, data_char, 6);
-			snprintf(data_char, sizeof(data_char), "%d", accz);
+			snprintf(data_char, sizeof(data_char), "%d", sensors_values.accZ);
 			write(client, data_char, 6);
 
-			snprintf(data_char, sizeof(data_char), "%d", gyrox);
+			snprintf(data_char, sizeof(data_char), "%d", sensors_values.gyroX);
 			write(client, data_char, 6);
-			snprintf(data_char, sizeof(data_char), "%d", gyroy);
+			snprintf(data_char, sizeof(data_char), "%d", sensors_values.gyroY);
 			write(client, data_char, 6);
-			snprintf(data_char, sizeof(data_char), "%d", gyroz);
+			snprintf(data_char, sizeof(data_char), "%d", sensors_values.gyroZ);
 			flag = write(client, data_char, 6);
 
 			// prev = stop;
