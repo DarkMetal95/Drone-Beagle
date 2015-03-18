@@ -7,6 +7,8 @@
 #include "../include/libbluetooth.h"
 #include "../include/libio.h"
 #include "../include/libpwm.h"
+#include "../include/libsensors.h"
+#include "../include/libi2c.h"
 
 #define INCREMENT			1000
 

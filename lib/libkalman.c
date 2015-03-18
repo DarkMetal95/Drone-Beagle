@@ -23,6 +23,7 @@ void kalman_init(Kalman_instance *instance)
  * The angle should be in degrees, the rate in degrees per second
  * and the delta time in seconds.
  */
+
 void computeNewAngle(Kalman_instance *instance, float newAngle, float newRate, float dt)
 {
 	float S, K[2], y, P00_temp, P01_temp;
