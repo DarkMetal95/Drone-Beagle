@@ -1,3 +1,7 @@
+#include <stdio.h>
+
+#include "../include/libpwm.h"
+
 void set_pwm_speed(long int speed1, long int speed2, long int speed3, long int speed4, FILE *motor1, FILE *motor2, FILE *motor3, FILE *motor4)
 {
 	char speed_c1[] = "PWM_SPEED";

@@ -12,7 +12,7 @@ EXEC=drone
 
 all: setup $(EXEC)
 
-$(EXEC): $(BDIR)/drone.o $(BDIR)/libio.o $(BDIR)/libbluetooth.o $(BDIR)/libsensors.o $(BDIR)/libkalman.o $(BDIR)/libi2c.o $(BDIR)/libpwm.o
+$(EXEC): $(BDIR)/drone.o $(BDIR)/libbluetooth.o $(BDIR)/libsensors.o $(BDIR)/libkalman.o $(BDIR)/libi2c.o $(BDIR)/libpwm.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 $(BDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) -o $@ -c $< $(CFLAGS)

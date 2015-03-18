@@ -1,129 +1,218 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include <linux/i2c-dev.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
+#include <stdio.h>
 #include <unistd.h>
-#include <time.h>
-#include <sys/socket.h>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/rfcomm.h>
-#include <bluetooth/sdp.h>
-#include <bluetooth/sdp_lib.h>
 
 #include "../include/libbluetooth.h"
-#include "../include/libi2c.h"
-#include "../include/libsensors.h"
-#include "../include/libio.h"
 #include "../include/libpwm.h"
+#include "../include/libsensors.h"
+#include "../include/libi2c.h"
 #include "../include/libkalman.h"
-
-#define INCREMENT			1000
 
 int main()
 {
+	int debug = 0;
 
-	/*
-	 * Variables
-	 */
-	
-	int i = 0, flag = 0, i2c_device;
+	int i2c_device;
+
+	int end_b = 1, end_w = 0, shut = 1;
+
 	int s, client;
-	int buf[2];
-	char data_char[6];
-	float dt_time, roll, pitch;
-	clock_t dt;
-	Sensors_values sensors_values;
-	Kalman_instance kalmanx, kalmany;
+	char key[1] = { 0x00 };
 	sdp_session_t *session = NULL;
 	sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };
 
+	long int speed1 = (long int)PWM_SPEED;
+	long int speed2 = (long int)PWM_SPEED;
+	long int speed3 = (long int)PWM_SPEED;
+	long int speed4 = (long int)PWM_SPEED;
+	FILE *motor1 = NULL, *motor2 = NULL, *motor3 = NULL, *motor4 = NULL;
+	char speed_c1[10], speed_c2[10], speed_c3[10], speed_c4[10];
+
 	/*
-	 * Setup
+	 * Init motors
+	 */
+
+	motor1 = fopen(PWM_DUTY_FILE1, "w");
+	motor2 = fopen(PWM_DUTY_FILE2, "w");
+	motor3 = fopen(PWM_DUTY_FILE3, "w");
+	motor4 = fopen(PWM_DUTY_FILE4, "w");
+
+	if (motor1 == NULL)
+	{
+		perror("An error occurred when opening the motor1\n");
+		exit(1);
+	}
+
+	if (motor2 == NULL)
+	{
+		perror("An error occurred when opening the motor2\n");
+		exit(1);
+	}
+
+	if (motor3 == NULL)
+	{
+		perror("An error occurred when opening the motor3\n");
+		exit(1);
+	}
+
+	if (motor4 == NULL)
+	{
+		perror("An error occurred when opening the motor4\n");
+		exit(1);
+	}
+
+	set_pwm_speed((long int)PWM_SPEED, (long int)PWM_SPEED,
+				  (long int)PWM_SPEED, (long int)PWM_SPEED,
+				  motor1, motor2, motor3, motor4);
+
+	/*
+	 * Init i2c
 	 */
 
 	i2c_device = i2c_setup();
+
+	if (i2c_device == -1)
+	{
+		perror("An error occurred when opening the I2C bus\n");
+		exit(1);
+	}
+
+	/*
+	 * Init bluetooth
+	 */
+
 	session = bt_register_service();
 	s = bt_server_register(&loc_addr);
-
-	kalman_init(&kalmanx);
-	kalman_init(&kalmany);
-	sensors_get_values(i2c_device, &sensors_values);
-
-	roll = atan2(sensors_values.accY, sensors_values.accZ) * RAD_TO_DEG;
-	pitch = atan(-sensors_values.accX / sqrt(sensors_values.accY * sensors_values.accY + sensors_values.accZ * sensors_values.accZ)) * RAD_TO_DEG;
-
-	kalmanx.angle = roll;
-	kalmany.angle = pitch;
-
-	dt = clock();
 
 	/*
 	 * Main loop
 	 */
 
-	while (1)
+	while (shut)
 	{
+		// waiting for bt client
 		client = bt_server_initiate(s, &rem_addr);
 
-		while (flag >= 0)
+		while ((end_b) && (end_w >= 0))
 		{
-			sensors_get_values(i2c_device, &sensors_values);
-			
-			dt_time = (float) dt / (CLOCKS_PER_SEC);
-			dt = clock();
+			read(client, key, 1);
+			//printf("%c\r", key[0]);
 
-			//computeNewAngle(Kalman_instance *instance, float newAngle, float newRate, float dt);
+			/* 
+			   Motors configuration
 
-			roll = atan2(sensors_values.accY, sensors_values.accZ) * RAD_TO_DEG;
-			pitch = atan(-sensors_values.accX / sqrt(sensors_values.accY * sensors_values.accY + sensors_values.accZ * sensors_values.accZ)) * RAD_TO_DEG;
+			   motor1		motor2
 
-			sensors_values.gyroX /= 131;
-			sensors_values.gyroY /= 131;
-			sensors_values.gyroZ /= 131;
-			
-			// printf("AccX = %f\t AccY = %f\t AccZ = %f\nGyroX = %f\t GyroY = 
-			// 
-			// 
-			// 
-			// %f\t GyroZ = %f\n\n",accx, accy, accz, gyrox, gyroy, gyroz);
 
-			snprintf(data_char, sizeof(data_char), "%d", sensors_values.accX);
-			write(client, data_char, 6);
-			snprintf(data_char, sizeof(data_char), "%d", sensors_values.accY);
-			write(client, data_char, 6);
-			snprintf(data_char, sizeof(data_char), "%d", sensors_values.accZ);
-			write(client, data_char, 6);
 
-			snprintf(data_char, sizeof(data_char), "%d", sensors_values.gyroX);
-			write(client, data_char, 6);
-			snprintf(data_char, sizeof(data_char), "%d", sensors_values.gyroY);
-			write(client, data_char, 6);
-			snprintf(data_char, sizeof(data_char), "%d", sensors_values.gyroZ);
-			flag = write(client, data_char, 6);
+			   motor4		motor3
+			*/
 
-			// prev = stop;
-			stop = clock();
+			switch (*key)
+			{
+			case 't':
+				speed1 += INCREMENT;
+				speed2 += INCREMENT;
+				speed3 += INCREMENT;
+				speed4 += INCREMENT;
+				set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
+							  motor3, motor4);
+				break;
 
-			stop_time = (double)stop / (CLOCKS_PER_SEC / 1000000);
-			// prev_time = (double) prev / (CLOCKS_PER_SEC / 1000000);
+			case 'g':
+				speed1 -= INCREMENT;
+				speed2 -= INCREMENT;
+				speed3 -= INCREMENT;
+				speed4 -= INCREMENT;
+				set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
+							  motor3, motor4);
+				break;
 
-			usleep(((1 / I2C_FREQ) * 1000000) - (stop_time - start_time));
-			i++;
-			printf("Paquets: %d\r", i);
-			// sample_frequency = 1/((stop_time/1000000)-(prev_time/1000000));
+			case 'z':
+				speed1 -= INCREMENT;
+				speed2 -= INCREMENT;
+				speed3 += INCREMENT;
+				speed4 += INCREMENT;
+				set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
+							  motor3, motor4);
+				break;
 
-			// printf("Start: %f\tStop: %f\t Prev: %f\t Sampling frequency:
-			// %f\n", start_time, stop_time, prev_time, sample_frequency);
+			case 's':
+				speed1 += INCREMENT;
+				speed2 += INCREMENT;
+				speed3 -= INCREMENT;
+				speed4 -= INCREMENT;
+				set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
+							  motor3, motor4);
+				break;
+
+			case 'q':
+				speed1 -= INCREMENT;
+				speed2 += INCREMENT;
+				speed3 += INCREMENT;
+				speed4 -= INCREMENT;
+				set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
+							  motor3, motor4);
+				break;
+
+			case 'd':
+				speed1 += INCREMENT;
+				speed2 -= INCREMENT;
+				speed3 -= INCREMENT;
+				speed4 += INCREMENT;
+				set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
+							  motor3, motor4);
+				break;
+
+			case 'k':
+				end_b = 0;
+				break;
+
+			case 'l':
+				shut = 0;
+				break;
+
+			case 'a':
+				if (debug == 1)
+					debug = 0;
+				else
+					debug = 1;
+				break;
+			}
+
+			if (debug == 1)
+			{
+				write(client, speed_c1, 10);
+				write(client, speed_c2, 10);
+				write(client, speed_c3, 10);
+				write(client, speed_c4, 10);
+			}
+
+			end_w = write(client, "ok", 2);
+
 		}
 
-		i = 0;
-		flag = 0;
+		end_w = 0;
+		end_b = 1;
+
 		close(client);
-		printf("\nDisconnected\n");
+		//printf("\nDisconnected\n");
 	}
 
+	set_pwm_speed((long int)PWM_SPEED, (long int)PWM_SPEED,
+				  (long int)PWM_SPEED, (long int)PWM_SPEED, motor1, motor2,
+				  motor3, motor4);
+
+	fclose(motor1);
+	fclose(motor2);
+	fclose(motor3);
+	fclose(motor4);
+
 	bt_end_session(s, session);
+
+	system("shutdown now\n\r");
 
 	return 0;
 }

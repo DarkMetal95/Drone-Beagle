@@ -18,13 +18,13 @@ int i2c_setup()
 	if ((device = open(I2C_DEVICE, O_RDWR)) < 0)
 	{
 		perror("Failed to open the i2c bus.\n");
-		exit(1);
+		return -1;
 	}
 
 	if (ioctl(device, I2C_SLAVE, 0x68) < 0)
 	{
 		perror("Failed to acquire bus access and/or talk to slave.\n");
-		exit(1);
+		return -1;
 	}
 
 	sample = (1000 / I2C_FREQ) - 1;
