@@ -2,6 +2,9 @@
  * Defines
  */
 
+#define PI					3.141592
+#define RAD_TO_DEG			180/PI
+
 /*
  * Structures
  */
@@ -23,4 +26,4 @@ typedef struct
  */
 
 void kalman_init(Kalman_instance *instance);
-void computeNewAngle(Kalman_instance *instance, float newAngle, float newRate, float dt);
+void kalman_compute_new_angle(Kalman_instance *instance, float newAngle, float newRate, float dt);

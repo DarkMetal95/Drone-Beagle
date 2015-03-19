@@ -24,7 +24,7 @@ void kalman_init(Kalman_instance *instance)
  * and the delta time in seconds.
  */
 
-void computeNewAngle(Kalman_instance *instance, float newAngle, float newRate, float dt)
+void kalman_compute_new_angle(Kalman_instance *instance, float newAngle, float newRate, float dt)
 {
 	float S, K[2], y, P00_temp, P01_temp;
 

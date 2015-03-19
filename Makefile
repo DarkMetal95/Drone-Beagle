@@ -6,7 +6,7 @@ SRCDIR=src
 LIBDIR=lib
 
 CFLAGS=-Wall
-LDFLAGS=-lbluetooth
+LDFLAGS=-lbluetooth -lm
 
 EXEC=drone
 
