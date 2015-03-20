@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <math.h>
 #include <time.h>
+#include <ncurses.h>
 
 #include "../include/libsensors.h"
 #include "../include/libi2c.h"
@@ -13,6 +15,7 @@ int main()
 
 	double roll, pitch;
 	double dt;
+	time_t t_start, t_end;
 	Sensors_values sv;
 	Kalman_instance kalman_x, kalman_y;
 
@@ -46,14 +49,25 @@ int main()
 	kalman_x.angle = roll;
 	kalman_y.angle = pitch;
 
-	// timer = ;
-	
+	t_start = clock();
+
+	/*
+	 * Init screen
+	 */
+
+	initscr();
+
+	/*
+	 * Main loop
+	 */
+
 	while (1)
 	{
 		sensors_get_values(i2c_device, &sv);
 
-		//dt = ;
-		//timer = ;
+		t_end = clock();
+		dt = (t_end - t_start) / CLOCKS_PER_SEC;
+		t_start = clock();
 
 		roll = atan(sv.accY / sqrt(sv.accX * sv.accX + sv.accZ * sv.accZ)) * RAD_TO_DEG;
 		pitch = atan2(-sv.accX, sv.accZ) * RAD_TO_DEG;
@@ -76,5 +90,11 @@ int main()
 
 		if (sv.gyroY < -180 || sv.gyroY > 180)
 			sv.gyroY = kalman_y.angle;
+
+		mvprintw(0, 0, "pitch : %f", kalman_y.angle);
+		mvprintw(1, 0, "roll : %f", kalman_x.angle);
+		refresh();
+
+		sleep(500);
 	}
 }
