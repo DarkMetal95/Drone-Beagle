@@ -1,6 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
+#include <time.h>
 #include <unistd.h>
+#include <pthread.h>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/rfcomm.h>
 
@@ -10,11 +13,59 @@
 #include "../include/libi2c.h"
 #include "../include/libkalman.h"
 
+/*
+ * Global variables
+ */
+
+int i2c_device;
+
+double roll, pitch;
+double dt;
+time_t t_start, t_end;
+Sensors_values sv;
+Kalman_instance kalman_x, kalman_y;
+
+void *compute_kalman_filter()
+{
+	while (1)
+	{
+		sensors_get_values(i2c_device, &sv);
+
+		t_end = clock();
+		dt = (t_end - t_start) / CLOCKS_PER_SEC;
+		t_start = clock();
+
+		roll = atan(sv.accY / sqrt(sv.accX * sv.accX + sv.accZ * sv.accZ)) * RAD_TO_DEG;
+		pitch = atan2(-sv.accX, sv.accZ) * RAD_TO_DEG;
+
+		kalman_x.rate = sv.gyroX / 131.;
+		kalman_y.rate = sv.gyroY / 131.;
+
+		if ((pitch < -90 && kalman_y.angle > 90) || (pitch > 90 && kalman_y.angle < -90))
+			kalman_y.angle = pitch;
+		else
+			kalman_compute_new_angle(&kalman_y, pitch, kalman_y.rate, dt);
+
+		if (abs(kalman_y.angle) > 90)
+			kalman_x.rate = -kalman_x.rate;
+
+		kalman_compute_new_angle(&kalman_x, roll, kalman_x.rate, dt);
+
+		if (sv.gyroX < -180 || sv.gyroX > 180)
+			sv.gyroX = kalman_x.angle;
+
+		if (sv.gyroY < -180 || sv.gyroY > 180)
+			sv.gyroY = kalman_y.angle;
+
+		sleep(2);
+	}
+
+	return NULL;
+}
+
 int main()
 {
 	int debug = 0;
-
-	int i2c_device;
 
 	int end_b = 1, end_w = 0, shut = 1;
 
@@ -29,6 +80,8 @@ int main()
 	long int speed4 = (long int)PWM_SPEED;
 	FILE *motor1 = NULL, *motor2 = NULL, *motor3 = NULL, *motor4 = NULL;
 	char speed_c1[10], speed_c2[10], speed_c3[10], speed_c4[10];
+
+	pthread_t tid;
 
 	/*
 	 * Init motors
@@ -85,6 +138,28 @@ int main()
 
 	session = bt_register_service();
 	s = bt_server_register(&loc_addr);
+
+	/*
+	 * Init Kalman
+	 */
+
+	kalman_init(&kalman_x);
+	kalman_init(&kalman_y);
+
+	// Wait for sensor to stabilize
+	sleep(1000);
+	
+	sensors_get_values(i2c_device, &sv);
+
+	roll = atan(sv.accY / sqrt(sv.accX * sv.accX + sv.accZ * sv.accZ)) * RAD_TO_DEG;
+	pitch = atan2(-sv.accX, sv.accZ) * RAD_TO_DEG;
+
+	kalman_x.angle = roll;
+	kalman_y.angle = pitch;
+
+	t_start = clock();
+
+	pthread_create(&tid, NULL, &compute_kalman_filter, NULL);
 
 	/*
 	 * Main loop

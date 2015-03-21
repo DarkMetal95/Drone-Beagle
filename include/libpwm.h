@@ -1,3 +1,6 @@
+#ifndef PWM_H
+#define PWM_H
+
 /* 
  * Defines
  */
@@ -10,3 +13,5 @@
 #define INCREMENT			1000
 
 void set_pwm_speed(long int speed1, long int speed2, long int speed3, long int speed4, FILE *motor1, FILE *motor2, FILE *motor3, FILE *motor4);
+
+#endif

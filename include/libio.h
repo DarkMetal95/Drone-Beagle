@@ -1,3 +1,6 @@
+#ifndef IO_H
+#define IO_H
+
 /* 
  * Defines
  */
@@ -11,3 +14,5 @@
 
 void io_changemode(int dir);
 int io_kbhit(void);
+
+#endif

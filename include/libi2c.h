@@ -1,3 +1,6 @@
+#ifndef I2C_H
+#define i2C_H
+
 /*
  * Defines
  */
@@ -11,3 +14,5 @@
  */
 
 int i2c_setup();
+
+#endif

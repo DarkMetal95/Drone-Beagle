@@ -1,3 +1,6 @@
+#ifndef SENSORS_H
+#define SENSORS_H
+
 /*
  * Defines
  */
@@ -21,3 +24,5 @@ typedef struct Sensors_values
  */
 
 void sensors_get_values(int device, Sensors_values *values);
+
+#endif

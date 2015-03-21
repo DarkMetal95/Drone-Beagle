@@ -1,3 +1,6 @@
+#ifndef BLUETOOTH_H
+#define BLUETOOTH_H
+
 #include <bluetooth/sdp.h>
 #include <bluetooth/sdp_lib.h>
 
@@ -25,3 +28,5 @@ sdp_session_t *bt_register_service();
 int bt_server_register(sockaddr_rc * loc_addr);
 int bt_server_initiate(int socket, sockaddr_rc * rem_addr);
 void bt_end_session(int socket, sdp_session_t * session);
+
+#endif
