@@ -24,6 +24,7 @@ double dt;
 time_t t_start, t_end;
 Sensors_values sv;
 Kalman_instance kalman_x, kalman_y;
+int kp, ki, kd;
 
 void *compute_kalman_filter()
 {
@@ -71,6 +72,9 @@ int main()
 
 	int s, client;
 	char key[1] = { 0x00 };
+	char coef[5] = { 0x00 }; 
+	char data[4];
+	char debug_inf[50];
 	sdp_session_t *session = NULL;
 	sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };
 
@@ -146,6 +150,14 @@ int main()
 	kalman_init(&kalman_x);
 	kalman_init(&kalman_y);
 
+	/*
+	 * Init PID
+	 */
+	
+	kp = 0;
+	ki = 0;
+	kd = 0;
+
 	// Wait for sensor to stabilize
 	sleep(1000);
 	
@@ -159,7 +171,7 @@ int main()
 
 	t_start = clock();
 
-	pthread_create(&tid, NULL, &compute_kalman_filter, NULL);
+	pthread_create(&tid, NULL, compute_kalman_filter, NULL);
 
 	/*
 	 * Main loop
@@ -257,12 +269,56 @@ int main()
 				break;
 			}
 
+			/*case 'U':
+				read(client,data,4)
+				break;
+			*/
+
+			case 0x01;
+				read(client,coef, 5);
+				if(coef[5] == 0x00)
+				{
+					coef[5] = 0x00;
+					kp = atoi(coef);
+
+					if(debug == 1)
+					{
+						sprintf(debug_inf, "Coef Kp set to: %d\n", kp);
+						write(client, debug_inf, 21);
+					}
+				}
+				else if(coef[5] == 0x01)
+				{
+					coef[5] = 0x00;
+					ki = atoi(coef);
+					if(debug == 1)
+					{
+						sprintf(debug_inf, "Coef Ki set to: %d\n", ki);
+						write(client, debug_inf, 21);
+					}
+				}
+				else if(coef[5] == 0x02)
+				{
+					coef[5] = 0x00;
+					kd = atoi(coef);
+					if(debug == 1)
+					{
+						sprintf(debug_inf, "Coef Kd set to: %d\n", kd);
+						write(client, debug_inf, 21);
+					}
+				}
+				break;
+
 			if (debug == 1)
 			{
-				write(client, speed_c1, 10);
-				write(client, speed_c2, 10);
-				write(client, speed_c3, 10);
-				write(client, speed_c4, 10);
+				sprintf(debug_inf, "Speed1: %d\n", speed1);
+				write(client, debug_inf, 19);
+				sprintf(debug_inf, "Speed2: %d\n", speed2);
+				write(client, debug_inf, 19);
+				sprintf(debug_inf, "Speed3: %d\n", speed3);
+				write(client, debug_inf, 19);
+				sprintf(debug_inf, "Speed4: %d\n", speed4);
+				write(client, debug_inf, 19);
 			}
 
 			end_w = write(client, "ok", 2);
