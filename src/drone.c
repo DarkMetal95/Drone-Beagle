@@ -73,7 +73,6 @@ int main()
 	int s, client;
 	char key[1] = { 0x00 };
 	char coef[5] = { 0x00 }; 
-	char data[4];
 	char debug_inf[50];
 	sdp_session_t *session = NULL;
 	sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };
@@ -83,7 +82,6 @@ int main()
 	long int speed3 = (long int)PWM_SPEED;
 	long int speed4 = (long int)PWM_SPEED;
 	FILE *motor1 = NULL, *motor2 = NULL, *motor3 = NULL, *motor4 = NULL;
-	char speed_c1[10], speed_c2[10], speed_c3[10], speed_c4[10];
 
 	pthread_t tid;
 
@@ -267,14 +265,13 @@ int main()
 				else
 					debug = 1;
 				break;
-			}
 
 			/*case 'U':
 				read(client,data,4)
 				break;
 			*/
 
-			case 0x01;
+			case 0x01:
 				read(client,coef, 5);
 				if(coef[5] == 0x00)
 				{
@@ -308,16 +305,17 @@ int main()
 					}
 				}
 				break;
+			}
 
 			if (debug == 1)
 			{
-				sprintf(debug_inf, "Speed1: %d\n", speed1);
+				sprintf(debug_inf, "Speed1: %ld\n", speed1);
 				write(client, debug_inf, 19);
-				sprintf(debug_inf, "Speed2: %d\n", speed2);
+				sprintf(debug_inf, "Speed2: %ld\n", speed2);
 				write(client, debug_inf, 19);
-				sprintf(debug_inf, "Speed3: %d\n", speed3);
+				sprintf(debug_inf, "Speed3: %ld\n", speed3);
 				write(client, debug_inf, 19);
-				sprintf(debug_inf, "Speed4: %d\n", speed4);
+				sprintf(debug_inf, "Speed4: %ld\n", speed4);
 				write(client, debug_inf, 19);
 			}
 
