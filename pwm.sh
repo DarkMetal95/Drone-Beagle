@@ -33,4 +33,4 @@ echo 1 > /sys/devices/ocp.3/pwm_test_P9_16.17/run
 
 sleep 1
 
-/home/root/Desktop/Drone/./motor_control
+/home/root/Desktop/Drone/drone

@@ -25,9 +25,9 @@ int main()
 
 	i2c_device = i2c_setup();
 
-	if (i2c_device == -1)
+	if (i2c_device < 0)
 	{
-		perror("An error occurred when opening the I2C bus\n");
+		perror("An error occurred during i2c setup\n");
 		exit(1);
 	}
 
