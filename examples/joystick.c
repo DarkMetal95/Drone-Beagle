@@ -18,6 +18,8 @@ int main()
 	s = bt_server_register(&loc_addr);
 
 	int shut = 1;
+	int x_angle_cons = 0;
+	int y_angle_cons = 0;
 
 	key[0] = 'a';
 	while(shut)
@@ -32,7 +34,27 @@ int main()
 			if(key[0] == 'U')
 			{
 				read(client, data, sizeof(data));
-				printf("readed: data1: %d data2: %d data3: %d data4: %d \n", data[0], data[1], data[2], data[3]);
+
+				if(data[1] <= 9)
+					x_angle_cons = -((data[0]*4)*data[1])/9;
+				else if(data[1] > 9  && data[1] <= 18)
+					x_angle_cons =  ((data[0]*4)*(data[1]-18))/9;
+				else if(data[1] > 18 && data[1] <= 27)
+					x_angle_cons =  ((data[0]*4)*(data[1]-18))/9;
+				else if(data[1] > 27 && data[1] <= 35)
+					x_angle_cons = -((data[0]*4)*(data[1]-35))/9;
+
+				if(data[1] <= 9)
+					y_angle_cons = -((data[0]*4)*(data[1]-9 ))/9;
+				else if(data[1] > 9  && data[1] <= 18)
+					y_angle_cons = -((data[0]*4)*(data[1]-9 ))/9;
+				else if(data[1] > 18 && data[1] <= 27)
+					y_angle_cons =  ((data[0]*4)*(data[1]-27))/9;
+				else if(data[1] > 27 && data[1] <= 35)
+					y_angle_cons =  ((data[0]*4)*(data[1]-27))/9;
+
+
+				printf("Consigne x: %d Consigne y: %d 		-----------------> y\n", x_angle_cons, y_angle_cons);
 			}
 		}
 

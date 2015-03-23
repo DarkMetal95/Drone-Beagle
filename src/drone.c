@@ -73,6 +73,7 @@ int main()
 	int s, client;
 	char key[1] = { 0x00 };
 	char coef[5] = { 0x00 }; 
+	char data[4];
 	char debug_inf[50];
 	sdp_session_t *session = NULL;
 	sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };
@@ -84,6 +85,8 @@ int main()
 	FILE *motor1 = NULL, *motor2 = NULL, *motor3 = NULL, *motor4 = NULL;
 
 	pthread_t tid;
+
+	int x_angle_cons, y_angle_cons;
 
 	/*
 	 * Init motors
@@ -147,6 +150,8 @@ int main()
 
 	kalman_init(&kalman_x);
 	kalman_init(&kalman_y);
+	x_angle_cons = 0;
+	y_angle_cons = 0;
 
 	/*
 	 * Init PID
@@ -197,6 +202,10 @@ int main()
 
 			switch (*key)
 			{
+			case 'U':
+				read(client, data, sizeof(data));
+				break;
+
 			case 't':
 				speed1 += INCREMENT;
 				speed2 += INCREMENT;
@@ -265,12 +274,7 @@ int main()
 				else
 					debug = 1;
 				break;
-
-			/*case 'U':
-				read(client,data,4)
-				break;
-			*/
-
+			
 			case 0x01:
 				read(client,coef, 5);
 				if(coef[5] == 0x00)
