@@ -12,7 +12,7 @@
 #define BT_SERVICE_DESC			"Remote control service"
 #define BT_SERVICE_PROV			"P0lyDr0n3"
 
-#define BT_RFCOMM_CHAN			11
+#define BT_RFCOMM_CHAN			1
 
 /* 
  * Structures

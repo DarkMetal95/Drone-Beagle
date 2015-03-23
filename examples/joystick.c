@@ -9,7 +9,7 @@
 int main()
 {
 	int s, client;
-	char key[1024] = { 0x00 };
+	char key[1];
 	char data[4];
 	sdp_session_t *session = NULL;
 	sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };
@@ -19,24 +19,21 @@ int main()
 
 	int shut = 1;
 
+	key[0] = 'a';
 	while(shut)
 	{
 		printf("Waiting for connection\n");
 		client = bt_server_initiate(s, &rem_addr);
 		printf("Connected! \n");
 
-		while(shut)
+		while(shut >= 0)
 		{
-			read(client, key, 1);
-			
+			read(client,key,sizeof(key));
 			if(key[0] == 'U')
 			{
-				read(client, data, 4);
-				printf("%s\n",data );
+				read(client, data, sizeof(data));
+				printf("readed: data1: %d data2: %d data3: %d data4: %d \n", data[0], data[1], data[2], data[3]);
 			}
-			else
-				shut = 0;
-
 		}
 
 		close(client);
