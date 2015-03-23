@@ -5,6 +5,7 @@
 #include <bluetooth/sdp.h>
 #include <bluetooth/sdp_lib.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include "../include/libbluetooth.h"
@@ -78,7 +79,7 @@ sdp_session_t *bt_register_service()
 /* 
  * Returns socket
  */
-int bt_server_register(sockaddr_rc * loc_addr)
+int bt_server_register(sockaddr_rc *loc_addr)
 {
 	// allocate socket
 	int s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
@@ -88,7 +89,7 @@ int bt_server_register(sockaddr_rc * loc_addr)
 	loc_addr->rc_family = AF_BLUETOOTH;
 	loc_addr->rc_bdaddr = *BDADDR_ANY;
 	loc_addr->rc_channel = (uint8_t) 1;
-	bind(s, (const sockaddr_rc *)loc_addr, sizeof(*loc_addr));
+	bind(s, (const struct sockaddr *)loc_addr, sizeof(*loc_addr));
 
 	return s;
 }
@@ -98,7 +99,6 @@ int bt_server_register(sockaddr_rc * loc_addr)
  */
 int bt_server_initiate(int socket, sockaddr_rc * rem_addr)
 {
-	char buffer[1024] = { 0 };
 	socklen_t opt = sizeof(*rem_addr);
 
 	// put socket into listening mode
@@ -106,10 +106,6 @@ int bt_server_initiate(int socket, sockaddr_rc * rem_addr)
 
 	// accept one connection
 	int client = accept(socket, (struct sockaddr *)&rem_addr, &opt);
-
-	ba2str(&rem_addr->rc_bdaddr, buffer);
-	fprintf(stderr, "Accepted connection from %s\n", buffer);
-	memset(buffer, 0, sizeof(buffer));
 
 	return client;
 }

@@ -180,7 +180,7 @@ int main()
 		// waiting for bt client
 		client = bt_server_initiate(s, &rem_addr);
 
-		while ((end_b) && (end_w >= 0))
+		while ((end_b) && (end_w >= 0) && shut)
 		{
 			read(client, key, 1);
 			//printf("%c\r", key[0]);

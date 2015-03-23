@@ -26,9 +26,9 @@
 
 ##Pour paramétrer les coefficients:
 
-Envoyer d'abord la valeur 0x01;
+Envoyer d'abord la valeur 0x01.
 
-Puis envoyer la valeur sous forme d'une tableau de 5 caractère, dont le 5ème char correspond au coefficient à modifier:
+Puis envoyer la valeur sous forme d'un tableau de 5 char, dont le 5ème correspond au coefficient à modifier:
 	0x00 : Kp
 	0x01 : Ki
 	0x02 : Kd
