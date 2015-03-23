@@ -20,15 +20,14 @@ void kalman_init(Kalman_instance *instance)
 
 /*
  * Computes the new angle based on the data given as parameters.
- * The angle should be in degrees, the rate in degrees per second
- * and the delta time in seconds.
+ * The angle should be in degrees and the delta time in seconds.
  */
 
-void kalman_compute_new_angle(Kalman_instance *instance, float newAngle, float newRate, float dt)
+void kalman_compute_new_angle(Kalman_instance *instance, float newAngle, float dt)
 {
 	float S, K[2], y, P00_temp, P01_temp;
 
-	instance->rate = newRate - instance->bias;
+	instance->rate -= instance->bias;
 	instance->angle += dt * instance->rate;
 
 	instance->P[0][0] += dt * (dt * instance->P[1][1] - instance->P[0][1] - instance->P[1][0] + instance->Q_angle);

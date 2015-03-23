@@ -78,12 +78,12 @@ int main()
 		if ((pitch < -90 && kalman_y.angle > 90) || (pitch > 90 && kalman_y.angle < -90))
 			kalman_y.angle = pitch;
 		else
-			kalman_compute_new_angle(&kalman_y, pitch, kalman_y.rate, dt);
+			kalman_compute_new_angle(&kalman_y, pitch, dt);
 
 		if (abs(kalman_y.angle) > 90)
 			kalman_x.rate = -kalman_x.rate;
 
-		kalman_compute_new_angle(&kalman_x, roll, kalman_x.rate, dt);
+		kalman_compute_new_angle(&kalman_x, roll, dt);
 
 		mvprintw(0, 0, "pitch : %f", kalman_y.angle);
 		mvprintw(1, 0, "roll : %f", kalman_x.angle);

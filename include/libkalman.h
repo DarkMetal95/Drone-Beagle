@@ -29,6 +29,6 @@ typedef struct
  */
 
 void kalman_init(Kalman_instance *instance);
-void kalman_compute_new_angle(Kalman_instance *instance, float newAngle, float newRate, float dt);
+void kalman_compute_new_angle(Kalman_instance *instance, float newAngle, float dt);
 
 #endif

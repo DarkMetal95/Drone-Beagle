@@ -45,12 +45,12 @@ void *compute_kalman_filter()
 		if ((pitch < -90 && kalman_y.angle > 90) || (pitch > 90 && kalman_y.angle < -90))
 			kalman_y.angle = pitch;
 		else
-			kalman_compute_new_angle(&kalman_y, pitch, kalman_y.rate, dt);
+			kalman_compute_new_angle(&kalman_y, pitch, dt);
 
 		if (abs(kalman_y.angle) > 90)
 			kalman_x.rate = -kalman_x.rate;
 
-		kalman_compute_new_angle(&kalman_x, roll, kalman_x.rate, dt);
+		kalman_compute_new_angle(&kalman_x, roll, dt);
 
 		if (sv.gyroX < -180 || sv.gyroX > 180)
 			sv.gyroX = kalman_x.angle;
