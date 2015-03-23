@@ -159,7 +159,7 @@ int main()
 
 	t_start = clock();
 
-	pthread_create(&tid, NULL, &compute_kalman_filter, NULL);
+	pthread_create(&tid, NULL, compute_kalman_filter, NULL);
 
 	/*
 	 * Main loop
