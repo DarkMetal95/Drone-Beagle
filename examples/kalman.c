@@ -15,7 +15,7 @@ int main()
 
 	double roll, pitch;
 	double dt;
-	time_t t_start, t_end;
+	clock_t t_start, t_end;
 	Sensors_values sv;
 	Kalman_instance kalman_x, kalman_y;
 
@@ -38,8 +38,8 @@ int main()
 	kalman_init(&kalman_x);
 	kalman_init(&kalman_y);
 
-	// Wait for sensor to stabilize
-	sleep(1000);
+	// Wait 100 ms for sensor to stabilize
+	usleep(100000);
 	
 	sensors_get_values(i2c_device, &sv);
 
@@ -66,7 +66,7 @@ int main()
 		sensors_get_values(i2c_device, &sv);
 
 		t_end = clock();
-		dt = (t_end - t_start) / CLOCKS_PER_SEC;
+		dt = 1000000. / CLOCKS_PER_SEC * (t_end - t_start);
 		t_start = clock();
 
 		roll = atan(sv.accY / sqrt(sv.accX * sv.accX + sv.accZ * sv.accZ)) * RAD_TO_DEG;
@@ -95,6 +95,6 @@ int main()
 		mvprintw(1, 0, "roll : %f", kalman_x.angle);
 		refresh();
 
-		sleep(500);
+		usleep(2000);
 	}
 }

@@ -21,7 +21,7 @@ int i2c_device;
 
 double roll, pitch;
 double dt;
-time_t t_start, t_end;
+clock_t t_start, t_end;
 Sensors_values sv;
 Kalman_instance kalman_x, kalman_y;
 int kp, ki, kd;
@@ -33,7 +33,7 @@ void *compute_kalman_filter()
 		sensors_get_values(i2c_device, &sv);
 
 		t_end = clock();
-		dt = (t_end - t_start) / CLOCKS_PER_SEC;
+		dt = 1000000. / CLOCKS_PER_SEC * (t_end - t_start);
 		t_start = clock();
 
 		roll = atan(sv.accY / sqrt(sv.accX * sv.accX + sv.accZ * sv.accZ)) * RAD_TO_DEG;
@@ -58,7 +58,7 @@ void *compute_kalman_filter()
 		if (sv.gyroY < -180 || sv.gyroY > 180)
 			sv.gyroY = kalman_y.angle;
 
-		sleep(2);
+		usleep(2000);
 	}
 
 	return NULL;
@@ -153,16 +153,8 @@ int main()
 	x_angle_cons = 0;
 	y_angle_cons = 0;
 
-	/*
-	 * Init PID
-	 */
-	
-	kp = 0;
-	ki = 0;
-	kd = 0;
-
-	// Wait for sensor to stabilize
-	sleep(1000);
+	// Wait 100 ms for sensor to stabilize
+	usleep(100000);
 	
 	sensors_get_values(i2c_device, &sv);
 
@@ -175,6 +167,14 @@ int main()
 	t_start = clock();
 
 	pthread_create(&tid, NULL, compute_kalman_filter, NULL);
+
+	/*
+	 * Init PID
+	 */
+	
+	kp = 0;
+	ki = 0;
+	kd = 0;
 
 	/*
 	 * Main loop
