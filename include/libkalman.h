@@ -5,8 +5,8 @@
  * Defines
  */
 
-#define PI					3.141592
-#define RAD_TO_DEG			180/PI
+#define PI					3.14159265
+#define RAD_TO_DEG			57.2957786
 
 /*
  * Structures
