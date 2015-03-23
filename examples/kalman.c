@@ -85,12 +85,6 @@ int main()
 
 		kalman_compute_new_angle(&kalman_x, roll, kalman_x.rate, dt);
 
-		if (sv.gyroX < -180 || sv.gyroX > 180)
-			sv.gyroX = kalman_x.angle;
-
-		if (sv.gyroY < -180 || sv.gyroY > 180)
-			sv.gyroY = kalman_y.angle;
-
 		mvprintw(0, 0, "pitch : %f", kalman_y.angle);
 		mvprintw(1, 0, "roll : %f", kalman_x.angle);
 		refresh();
