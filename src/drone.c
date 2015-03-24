@@ -35,6 +35,8 @@ int x_angle_cons, y_angle_cons, z_height_cons;
 int kp, ki, kd;
 int commande_x, commande_y;
 long int speed1, speed2, speed3, speed4;
+static pthread_mutex_t kalman_sync_mutex1;
+static pthread_mutex_t kalman_sync_mutex2; 
 
 FILE *motor1 = NULL, *motor2 = NULL, *motor3 = NULL, *motor4 = NULL;
 
@@ -42,6 +44,8 @@ void *compute_kalman_filter()
 {
 	while (1)
 	{
+		pthread_mutex_lock(&kalman_sync_mutex1);
+
 		sensors_get_values(i2c_device, &sv);
 
 		gettimeofday(&t_end, NULL);
@@ -72,6 +76,8 @@ void *compute_kalman_filter()
 			sv.gyroY = kalman_y.angle;
 
 		usleep(2000);
+
+		pthread_mutex_unlock(&kalman_sync_mutex2);
 	}
 
 	return NULL;
@@ -84,6 +90,8 @@ void *PID()
 
 	while(1)
 	{
+		pthread_mutex_lock(&kalman_sync_mutex2);
+
 		errorx = (double)x_angle_cons - kalman_x.angle;
 		sum_errorx += errorx;
 		commande_x = kp * errorx + ki * sum_errorx + kd * (errorx - prev_errorx);
@@ -95,6 +103,8 @@ void *PID()
 		prev_errory = errory;
 
 		motor_control();
+
+		pthread_mutex_unlock(&kalman_sync_mutex1);
 	}
 
 	return NULL;
@@ -238,6 +248,16 @@ int main()
 	kp = 300;
 	ki = 6;
 	kd = 500;
+
+	/*
+	 * Init threads
+	 */
+
+	kalman_sync_mutex1 = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
+	kalman_sync_mutex2 = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
+
+	pthread_mutex_lock(&kalman_sync_mutex2);
+	pthread_mutex_unlock(&kalman_sync_mutex1);
 
 	pthread_create(&tid, NULL, compute_kalman_filter, NULL);
 	pthread_create(&t_pid, NULL, PID, NULL);
