@@ -3,6 +3,7 @@
 #include <math.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/time.h>
 #include <pthread.h>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/rfcomm.h>
@@ -26,8 +27,8 @@ void motor_control();
 int i2c_device;
 
 double roll, pitch;
-double dt;
-clock_t t_start, t_end;
+double dt_time;
+struct timeval t_start, t_end, dt;
 Sensors_values sv;
 Kalman_instance kalman_x, kalman_y;
 int x_angle_cons, y_angle_cons, z_height_cons;
@@ -43,9 +44,10 @@ void *compute_kalman_filter()
 	{
 		sensors_get_values(i2c_device, &sv);
 
-		t_end = clock();
-		dt = 1000000. / CLOCKS_PER_SEC * (t_end - t_start);
-		t_start = clock();
+		gettimeofday(&t_end, NULL);
+		timersub(&t_end, &t_start, &dt);
+		dt_time = dt.tv_sec+((double)dt.tv_usec/1000000);
+		gettimeofday(&t_start, NULL);
 
 		roll = atan(sv.accY / sqrt(sv.accX * sv.accX + sv.accZ * sv.accZ)) * RAD_TO_DEG;
 		pitch = atan2(-sv.accX, sv.accZ) * RAD_TO_DEG;
@@ -56,12 +58,12 @@ void *compute_kalman_filter()
 		if ((pitch < -90 && kalman_y.angle > 90) || (pitch > 90 && kalman_y.angle < -90))
 			kalman_y.angle = pitch;
 		else
-			kalman_compute_new_angle(&kalman_y, pitch, dt);
+			kalman_compute_new_angle(&kalman_y, pitch, dt_time);
 
 		if (abs(kalman_y.angle) > 90)
 			kalman_x.rate = -kalman_x.rate;
 
-		kalman_compute_new_angle(&kalman_x, roll, dt);
+		kalman_compute_new_angle(&kalman_x, roll, dt_time);
 
 		if (sv.gyroX < -180 || sv.gyroX > 180)
 			sv.gyroX = kalman_x.angle;
@@ -227,7 +229,7 @@ int main()
 	kalman_x.angle = roll;
 	kalman_y.angle = pitch;
 
-	t_start = clock();
+	gettimeofday(&t_start, NULL);
 
 	/*
 	 * Init PID
