@@ -256,8 +256,8 @@ int main()
 	kalman_sync_mutex1 = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
 	kalman_sync_mutex2 = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
 
-	pthread_mutex_lock(&kalman_sync_mutex2);
 	pthread_mutex_unlock(&kalman_sync_mutex1);
+	pthread_mutex_lock(&kalman_sync_mutex2);
 
 	pthread_create(&tid, NULL, compute_kalman_filter, NULL);
 	pthread_create(&t_pid, NULL, PID, NULL);
@@ -377,12 +377,10 @@ int main()
 		end_w = 0;
 		end_b = 1;
 
+		set_pwm_speed((long int)PWM_SPEED, (long int)PWM_SPEED, (long int)PWM_SPEED, (long int)PWM_SPEED, motor1, motor2, motor3, motor4);
+
 		close(client);
 	}
-
-	set_pwm_speed((long int)PWM_SPEED, (long int)PWM_SPEED,
-				  (long int)PWM_SPEED, (long int)PWM_SPEED, motor1, motor2,
-				  motor3, motor4);
 
 	fclose(motor1);
 	fclose(motor2);
