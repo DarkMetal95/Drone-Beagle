@@ -14,6 +14,12 @@
 #include "../include/libkalman.h"
 
 /*
+ * Prootypes
+ */
+
+void motor_control();
+
+/*
  * Global variables
  */
 
@@ -24,7 +30,12 @@ double dt;
 time_t t_start, t_end;
 Sensors_values sv;
 Kalman_instance kalman_x, kalman_y;
+int x_angle_cons, y_angle_cons, z_height_cons;
 int kp, ki, kd;
+int commande_x, commande_y;
+long int speed1, speed2, speed3, speed4;
+
+FILE *motor1 = NULL, *motor2 = NULL, *motor3 = NULL, *motor4 = NULL;
 
 void *compute_kalman_filter()
 {
@@ -57,11 +68,63 @@ void *compute_kalman_filter()
 
 		if (sv.gyroY < -180 || sv.gyroY > 180)
 			sv.gyroY = kalman_y.angle;
-
-		sleep(2);
 	}
 
 	return NULL;
+}
+
+void *PID()
+{
+	double errorx, sum_errorx = 0, prev_errorx = 0;
+	double errory, sum_errory = 0, prev_errory = 0;
+
+	while(1)
+	{
+		errorx = (double)x_angle_cons - kalman_x.angle;
+		sum_errorx += errorx;
+		commande_x = kp * errorx + ki * sum_errorx + kd * (errorx - prev_errorx);
+		prev_errorx = errorx;
+
+		errory = (double)y_angle_cons - kalman_y.angle;
+		sum_errory += errory;
+		commande_y = kp * errory + ki * sum_errory + kd * (errory - prev_errory);
+		prev_errory = errory;
+
+		motor_control();
+	}
+
+	return NULL;
+}
+
+/* 
+   Motors configuration
+
+   motor1		motor2
+
+
+
+   motor4		motor3
+*/
+
+void motor_control()
+{
+	speed1 += commande_x;
+	speed4 += commande_x;
+	speed2 -= commande_x;
+	speed3 -= commande_x;
+
+	speed1 -= commande_y;
+	speed2 -= commande_y;
+	speed3 += commande_y;
+	speed4 += commande_y;
+
+	speed1 += z_height_cons*20;
+	speed2 += z_height_cons*20;
+	speed3 += z_height_cons*20;
+	speed4 += z_height_cons*20;
+
+	set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
+				  motor3, motor4);
 }
 
 int main()
@@ -78,15 +141,13 @@ int main()
 	sdp_session_t *session = NULL;
 	sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };
 
-	long int speed1 = (long int)PWM_SPEED;
-	long int speed2 = (long int)PWM_SPEED;
-	long int speed3 = (long int)PWM_SPEED;
-	long int speed4 = (long int)PWM_SPEED;
-	FILE *motor1 = NULL, *motor2 = NULL, *motor3 = NULL, *motor4 = NULL;
+	speed1 = (long int)PWM_SPEED;
+	speed2 = (long int)PWM_SPEED;
+	speed3 = (long int)PWM_SPEED;
+	speed4 = (long int)PWM_SPEED;
 
 	pthread_t tid;
-
-	int x_angle_cons, y_angle_cons;
+	pthread_t t_pid;
 
 	/*
 	 * Init motors
@@ -99,25 +160,25 @@ int main()
 
 	if (motor1 == NULL)
 	{
-		perror("An error occurred when opening the motor1\n");
+		perror("An error occurred when opening the motor1");
 		exit(1);
 	}
 
 	if (motor2 == NULL)
 	{
-		perror("An error occurred when opening the motor2\n");
+		perror("An error occurred when opening the motor2");
 		exit(1);
 	}
 
 	if (motor3 == NULL)
 	{
-		perror("An error occurred when opening the motor3\n");
+		perror("An error occurred when opening the motor3");
 		exit(1);
 	}
 
 	if (motor4 == NULL)
 	{
-		perror("An error occurred when opening the motor4\n");
+		perror("An error occurred when opening the motor4");
 		exit(1);
 	}
 
@@ -157,9 +218,9 @@ int main()
 	 * Init PID
 	 */
 	
-	kp = 0;
-	ki = 0;
-	kd = 0;
+	kp = 300;
+	ki = 6;
+	kd = 500;
 
 	// Wait for sensor to stabilize
 	sleep(1000);
@@ -175,6 +236,7 @@ int main()
 	t_start = clock();
 
 	pthread_create(&tid, NULL, compute_kalman_filter, NULL);
+	pthread_create(&t_pid, NULL, PID, NULL);
 
 	/*
 	 * Main loop
@@ -190,74 +252,38 @@ int main()
 			read(client, key, 1);
 			//printf("%c\r", key[0]);
 
-			/* 
-			   Motors configuration
-
-			   motor1		motor2
-
-
-
-			   motor4		motor3
-			*/
-
 			switch (*key)
 			{
 			case 'U':
 				read(client, data, sizeof(data));
-				break;
 
-			case 't':
-				speed1 += INCREMENT;
-				speed2 += INCREMENT;
-				speed3 += INCREMENT;
-				speed4 += INCREMENT;
-				set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
-							  motor3, motor4);
-				break;
+				if(data[1] <= 9)
+					x_angle_cons = -((data[0]*4)*data[1])/9;
+				else if(data[1] > 9  && data[1] <= 18)
+					x_angle_cons =  ((data[0]*4)*(data[1]-18))/9;
+				else if(data[1] > 18 && data[1] <= 27)
+					x_angle_cons =  ((data[0]*4)*(data[1]-18))/9;
+				else if(data[1] > 27 && data[1] <= 35)
+					x_angle_cons = -((data[0]*4)*(data[1]-35))/9;
 
-			case 'g':
-				speed1 -= INCREMENT;
-				speed2 -= INCREMENT;
-				speed3 -= INCREMENT;
-				speed4 -= INCREMENT;
-				set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
-							  motor3, motor4);
-				break;
+				if(data[1] <= 9)
+					y_angle_cons = -((data[0]*4)*(data[1]-9 ))/9;
+				else if(data[1] > 9  && data[1] <= 18)
+					y_angle_cons = -((data[0]*4)*(data[1]-9 ))/9;
+				else if(data[1] > 18 && data[1] <= 27)
+					y_angle_cons =  ((data[0]*4)*(data[1]-27))/9;
+				else if(data[1] > 27 && data[1] <= 35)
+					y_angle_cons =  ((data[0]*4)*(data[1]-27))/9;
 
-			case 'z':
-				speed1 -= INCREMENT;
-				speed2 -= INCREMENT;
-				speed3 += INCREMENT;
-				speed4 += INCREMENT;
-				set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
-							  motor3, motor4);
-				break;
+				if(data[3] <= 9)
+					z_height_cons = -((data[2]*4)*(data[3]-9 ))/9;
+				else if(data[3] > 9  && data[3] <= 18)
+					z_height_cons = -((data[2]*4)*(data[3]-9 ))/9;
+				else if(data[3] > 18 && data[3] <= 27)
+					z_height_cons =  ((data[2]*4)*(data[3]-27))/9;
+				else if(data[3] > 27 && data[3] <= 35)
+					z_height_cons =  ((data[2]*4)*(data[3]-27))/9;
 
-			case 's':
-				speed1 += INCREMENT;
-				speed2 += INCREMENT;
-				speed3 -= INCREMENT;
-				speed4 -= INCREMENT;
-				set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
-							  motor3, motor4);
-				break;
-
-			case 'q':
-				speed1 -= INCREMENT;
-				speed2 += INCREMENT;
-				speed3 += INCREMENT;
-				speed4 -= INCREMENT;
-				set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
-							  motor3, motor4);
-				break;
-
-			case 'd':
-				speed1 += INCREMENT;
-				speed2 -= INCREMENT;
-				speed3 -= INCREMENT;
-				speed4 += INCREMENT;
-				set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
-							  motor3, motor4);
 				break;
 
 			case 'k':

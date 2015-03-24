@@ -14,15 +14,17 @@
 # Liste des commandes
 ##Toutes les commandes:
 
-	't': Altitude +
-	'g': Altitude -
-	'z': Déplacement avant
-	'q': Déplacement latéral gauche
-	's': Déplacement arrière
-	'd': Déplacement latéral droit
 	'k': Déconnection bluetooth
 	'l': Extinction de la BBB
 	'a': Activation du mode débug
+
+Le message de la manette est le suivant (message à utiliser de manière à émuler la manette):
+
+*Premier   octet => 0x55 - 'U'
+*Deuxième  octet => Puissance Joystick 1
+*Troisième octet => Angle Joystick 1
+*Quatrième octet => Puissance Joystick 2
+*Cinquième octet => Angle Joystick 2
 
 ##Pour paramétrer les coefficients:
 

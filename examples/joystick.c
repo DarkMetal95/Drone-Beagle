@@ -20,6 +20,7 @@ int main()
 	int shut = 1;
 	int x_angle_cons = 0;
 	int y_angle_cons = 0;
+	int z_height_cons = 0;
 
 	key[0] = 'a';
 	while(shut)
@@ -53,8 +54,17 @@ int main()
 				else if(data[1] > 27 && data[1] <= 35)
 					y_angle_cons =  ((data[0]*4)*(data[1]-27))/9;
 
+				if(data[3] <= 9)
+					z_height_cons = -((data[2]*4)*(data[3]-9 ))/9;
+				else if(data[3] > 9  && data[3] <= 18)
+					z_height_cons = -((data[2]*4)*(data[3]-9 ))/9;
+				else if(data[3] > 18 && data[3] <= 27)
+					z_height_cons =  ((data[2]*4)*(data[3]-27))/9;
+				else if(data[3] > 27 && data[3] <= 35)
+					z_height_cons =  ((data[2]*4)*(data[3]-27))/9;
 
-				printf("Consigne x: %d Consigne y: %d 		-----------------> y\n", x_angle_cons, y_angle_cons);
+
+				printf("Consigne x: %d Consigne y: %d Consigne z: %d		-----------------> y\n", x_angle_cons, y_angle_cons, z_height_cons);
 			}
 		}
 

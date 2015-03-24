@@ -98,94 +98,57 @@ int main()
 			switch(*key)
 			{
 				case 't':
-					speed1 += INCREMENT;
-					speed2 += INCREMENT;
-					speed3 += INCREMENT;
-					speed4 += INCREMENT;
-					sprintf(speed_c1, "%ld", speed1);
-					sprintf(speed_c2, "%ld", speed2);
-					sprintf(speed_c3, "%ld", speed3);
-					sprintf(speed_c4, "%ld", speed4);
-					fputs(speed_c1, motor1);
-					fputs(speed_c2, motor2);
-					fputs(speed_c3, motor3);
-					fputs(speed_c4, motor4);
-					break;
+				speed1 += INCREMENT;
+				speed2 += INCREMENT;
+				speed3 += INCREMENT;
+				speed4 += INCREMENT;
+				set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
+							  motor3, motor4);
+				break;
 
-				case 'g':
-					speed1 -= INCREMENT;
-					speed2 -= INCREMENT;
-					speed3 -= INCREMENT;
-					speed4 -= INCREMENT;
-					sprintf(speed_c1, "%ld", speed1);
-					sprintf(speed_c2, "%ld", speed2);
-					sprintf(speed_c3, "%ld", speed3);
-					sprintf(speed_c4, "%ld", speed4);
-					fputs(speed_c1, motor1);
-					fputs(speed_c2, motor2);
-					fputs(speed_c3, motor3);
-					fputs(speed_c4, motor4);
-					break;
+			case 'g':
+				speed1 -= INCREMENT;
+				speed2 -= INCREMENT;
+				speed3 -= INCREMENT;
+				speed4 -= INCREMENT;
+				set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
+							  motor3, motor4);
+				break;
 
-				case 'z':
-					speed1 -= INCREMENT;
-					speed2 -= INCREMENT;
-					speed3 += INCREMENT;
-					speed4 += INCREMENT;
-					sprintf(speed_c1, "%ld", speed1);
-					sprintf(speed_c2, "%ld", speed2);
-					sprintf(speed_c3, "%ld", speed3);
-					sprintf(speed_c4, "%ld", speed4);
-					fputs(speed_c1, motor1);
-					fputs(speed_c2, motor2);
-					fputs(speed_c3, motor3);
-					fputs(speed_c4, motor4);
-					break;
+			case 'z':
+				speed1 -= INCREMENT;
+				speed2 -= INCREMENT;
+				speed3 += INCREMENT;
+				speed4 += INCREMENT;
+				set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
+							  motor3, motor4);
+				break;
 
-				case 's':
-					speed1 += INCREMENT;
-					speed2 += INCREMENT;
-					speed3 -= INCREMENT;
-					speed4 -= INCREMENT;
-					sprintf(speed_c1, "%ld", speed1);
-					sprintf(speed_c2, "%ld", speed2);
-					sprintf(speed_c3, "%ld", speed3);
-					sprintf(speed_c4, "%ld", speed4);
-					fputs(speed_c1, motor1);
-					fputs(speed_c2, motor2);
-					fputs(speed_c3, motor3);
-					fputs(speed_c4, motor4);
-					break;
+			case 's':
+				speed1 += INCREMENT;
+				speed2 += INCREMENT;
+				speed3 -= INCREMENT;
+				speed4 -= INCREMENT;
+				set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
+							  motor3, motor4);
+				break;
 
-				case 'q':
-					speed1 -= INCREMENT;
-					speed2 += INCREMENT;
-					speed3 += INCREMENT;
-					speed4 -= INCREMENT;
-					sprintf(speed_c1, "%ld", speed1);
-					sprintf(speed_c2, "%ld", speed2);
-					sprintf(speed_c3, "%ld", speed3);
-					sprintf(speed_c4, "%ld", speed4);
-					fputs(speed_c1, motor1);
-					fputs(speed_c2, motor2);
-					fputs(speed_c3, motor3);
-					fputs(speed_c4, motor4);
-					break;
+			case 'q':
+				speed1 -= INCREMENT;
+				speed2 += INCREMENT;
+				speed3 += INCREMENT;
+				speed4 -= INCREMENT;
+				set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
+							  motor3, motor4);
+				break;
 
-				case 'd':
-					speed1 += INCREMENT;
-					speed2 -= INCREMENT;
-					speed3 -= INCREMENT;
-					speed4 += INCREMENT;
-					sprintf(speed_c1, "%ld", speed1);
-					sprintf(speed_c2, "%ld", speed2);
-					sprintf(speed_c3, "%ld", speed3);
-					sprintf(speed_c4, "%ld", speed4);
-					fputs(speed_c1, motor1);
-					fputs(speed_c2, motor2);
-					fputs(speed_c3, motor3);
-					fputs(speed_c4, motor4);
-					break;
+			case 'd':
+				speed1 += INCREMENT;
+				speed2 -= INCREMENT;
+				speed3 -= INCREMENT;
+				speed4 += INCREMENT;
+				set_pwm_speed(speed1, speed2, speed3, speed4, motor1, motor2,
+							  motor3, motor4);
 
 				case 'k':
 					end_b = 0;
