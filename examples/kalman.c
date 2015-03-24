@@ -15,7 +15,7 @@ int main()
 
 	double roll, pitch;
 	double dt;
-	time_t t_start, t_end;
+	clock_t t_start, t_end;
 	Sensors_values sv;
 	Kalman_instance kalman_x, kalman_y;
 
@@ -25,9 +25,9 @@ int main()
 
 	i2c_device = i2c_setup();
 
-	if (i2c_device == -1)
+	if (i2c_device < 0)
 	{
-		perror("An error occurred when opening the I2C bus\n");
+		perror("An error occurred during i2c setup\n");
 		exit(1);
 	}
 
@@ -38,8 +38,8 @@ int main()
 	kalman_init(&kalman_x);
 	kalman_init(&kalman_y);
 
-	// Wait for sensor to stabilize
-	sleep(1000);
+	// Wait 100 ms for sensor to stabilize
+	usleep(100000);
 	
 	sensors_get_values(i2c_device, &sv);
 
@@ -66,7 +66,7 @@ int main()
 		sensors_get_values(i2c_device, &sv);
 
 		t_end = clock();
-		dt = (t_end - t_start) / CLOCKS_PER_SEC;
+		dt = 1000000. / CLOCKS_PER_SEC * (t_end - t_start);
 		t_start = clock();
 
 		roll = atan(sv.accY / sqrt(sv.accX * sv.accX + sv.accZ * sv.accZ)) * RAD_TO_DEG;
@@ -78,23 +78,17 @@ int main()
 		if ((pitch < -90 && kalman_y.angle > 90) || (pitch > 90 && kalman_y.angle < -90))
 			kalman_y.angle = pitch;
 		else
-			kalman_compute_new_angle(&kalman_y, pitch, kalman_y.rate, dt);
+			kalman_compute_new_angle(&kalman_y, pitch, dt);
 
 		if (abs(kalman_y.angle) > 90)
 			kalman_x.rate = -kalman_x.rate;
 
-		kalman_compute_new_angle(&kalman_x, roll, kalman_x.rate, dt);
-
-		if (sv.gyroX < -180 || sv.gyroX > 180)
-			sv.gyroX = kalman_x.angle;
-
-		if (sv.gyroY < -180 || sv.gyroY > 180)
-			sv.gyroY = kalman_y.angle;
+		kalman_compute_new_angle(&kalman_x, roll, dt);
 
 		mvprintw(0, 0, "pitch : %f", kalman_y.angle);
 		mvprintw(1, 0, "roll : %f", kalman_x.angle);
 		refresh();
 
-		sleep(500);
+		usleep(2000);
 	}
 }

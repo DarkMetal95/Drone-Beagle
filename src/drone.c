@@ -27,7 +27,7 @@ int i2c_device;
 
 double roll, pitch;
 double dt;
-time_t t_start, t_end;
+clock_t t_start, t_end;
 Sensors_values sv;
 Kalman_instance kalman_x, kalman_y;
 int x_angle_cons, y_angle_cons, z_height_cons;
@@ -44,7 +44,7 @@ void *compute_kalman_filter()
 		sensors_get_values(i2c_device, &sv);
 
 		t_end = clock();
-		dt = (t_end - t_start) / CLOCKS_PER_SEC;
+		dt = 1000000. / CLOCKS_PER_SEC * (t_end - t_start);
 		t_start = clock();
 
 		roll = atan(sv.accY / sqrt(sv.accX * sv.accX + sv.accZ * sv.accZ)) * RAD_TO_DEG;
@@ -56,18 +56,20 @@ void *compute_kalman_filter()
 		if ((pitch < -90 && kalman_y.angle > 90) || (pitch > 90 && kalman_y.angle < -90))
 			kalman_y.angle = pitch;
 		else
-			kalman_compute_new_angle(&kalman_y, pitch, kalman_y.rate, dt);
+			kalman_compute_new_angle(&kalman_y, pitch, dt);
 
 		if (abs(kalman_y.angle) > 90)
 			kalman_x.rate = -kalman_x.rate;
 
-		kalman_compute_new_angle(&kalman_x, roll, kalman_x.rate, dt);
+		kalman_compute_new_angle(&kalman_x, roll, dt);
 
 		if (sv.gyroX < -180 || sv.gyroX > 180)
 			sv.gyroX = kalman_x.angle;
 
 		if (sv.gyroY < -180 || sv.gyroY > 180)
 			sv.gyroY = kalman_y.angle;
+
+		usleep(2000);
 	}
 
 	return NULL;
@@ -194,7 +196,7 @@ int main()
 
 	if (i2c_device == -1)
 	{
-		perror("An error occurred when opening the I2C bus\n");
+		perror("An error occurred during i2c setup\n");
 		exit(1);
 	}
 
@@ -214,16 +216,8 @@ int main()
 	x_angle_cons = 0;
 	y_angle_cons = 0;
 
-	/*
-	 * Init PID
-	 */
-	
-	kp = 300;
-	ki = 6;
-	kd = 500;
-
-	// Wait for sensor to stabilize
-	sleep(1000);
+	// Wait 100 ms for sensor to stabilize
+	usleep(100000);
 	
 	sensors_get_values(i2c_device, &sv);
 
@@ -235,6 +229,14 @@ int main()
 
 	t_start = clock();
 
+	/*
+	 * Init PID
+	 */
+	
+	kp = 300;
+	ki = 6;
+	kd = 500;
+
 	pthread_create(&tid, NULL, compute_kalman_filter, NULL);
 	pthread_create(&t_pid, NULL, PID, NULL);
 
@@ -244,13 +246,11 @@ int main()
 
 	while (shut)
 	{
-		// waiting for bt client
 		client = bt_server_initiate(s, &rem_addr);
 
 		while ((end_b) && (end_w >= 0) && shut)
 		{
 			read(client, key, 1);
-			//printf("%c\r", key[0]);
 
 			switch (*key)
 			{
@@ -283,7 +283,6 @@ int main()
 					z_height_cons =  ((data[2]*4)*(data[3]-27))/9;
 				else if(data[3] > 27 && data[3] <= 35)
 					z_height_cons =  ((data[2]*4)*(data[3]-27))/9;
-
 				break;
 
 			case 'k':
@@ -357,7 +356,6 @@ int main()
 		end_b = 1;
 
 		close(client);
-		//printf("\nDisconnected\n");
 	}
 
 	set_pwm_speed((long int)PWM_SPEED, (long int)PWM_SPEED,
