@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <math.h>
 #include <time.h>
+#include <sys/time.h>
 #include <ncurses.h>
 
 #include "../include/libsensors.h"
@@ -14,8 +15,8 @@ int main()
 	int i2c_device;
 
 	double roll, pitch;
-	double dt;
-	clock_t t_start, t_end;
+	double dt_time;
+	struct timeval t_start, t_end, dt;
 	Sensors_values sv;
 	Kalman_instance kalman_x, kalman_y;
 
@@ -49,7 +50,7 @@ int main()
 	kalman_x.angle = roll;
 	kalman_y.angle = pitch;
 
-	t_start = clock();
+	gettimeofday(&t_start, NULL);
 
 	/*
 	 * Init screen
@@ -65,9 +66,10 @@ int main()
 	{
 		sensors_get_values(i2c_device, &sv);
 
-		t_end = clock();
-		dt = 1000000. / CLOCKS_PER_SEC * (t_end - t_start);
-		t_start = clock();
+		gettimeofday(&t_end, NULL);
+		timersub(&t_end, &t_start, &dt);
+		dt_time = dt.tv_sec + ((double) dt.tv_usec / 1000000);
+		gettimeofday(&t_start, NULL);
 
 		roll = atan(sv.accY / sqrt(sv.accX * sv.accX + sv.accZ * sv.accZ)) * RAD_TO_DEG;
 		pitch = atan2(-sv.accX, sv.accZ) * RAD_TO_DEG;
@@ -78,12 +80,12 @@ int main()
 		if ((pitch < -90 && kalman_y.angle > 90) || (pitch > 90 && kalman_y.angle < -90))
 			kalman_y.angle = pitch;
 		else
-			kalman_compute_new_angle(&kalman_y, pitch, dt);
+			kalman_compute_new_angle(&kalman_y, pitch, dt_time);
 
 		if (abs(kalman_y.angle) > 90)
 			kalman_x.rate = -kalman_x.rate;
 
-		kalman_compute_new_angle(&kalman_x, roll, dt);
+		kalman_compute_new_angle(&kalman_x, roll, dt_time);
 
 		mvprintw(0, 0, "pitch : %f", kalman_y.angle);
 		mvprintw(1, 0, "roll : %f", kalman_x.angle);
