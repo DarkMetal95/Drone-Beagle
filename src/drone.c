@@ -330,9 +330,9 @@ int main()
 			
 			case 0x01:
 				read(client,coef, 5);
-				if(coef[5] == 0x00)
+				if(coef[4] == 0x00)
 				{
-					coef[5] = 0x00;
+					coef[4] = 0x00;
 					kp = atoi(coef);
 
 					if(debug == 1)
@@ -341,9 +341,9 @@ int main()
 						write(client, debug_inf, 21);
 					}
 				}
-				else if(coef[5] == 0x01)
+				else if(coef[4] == 0x01)
 				{
-					coef[5] = 0x00;
+					coef[4] = 0x00;
 					ki = atoi(coef);
 					if(debug == 1)
 					{
@@ -351,9 +351,9 @@ int main()
 						write(client, debug_inf, 21);
 					}
 				}
-				else if(coef[5] == 0x02)
+				else if(coef[4] == 0x02)
 				{
-					coef[5] = 0x00;
+					coef[4] = 0x00;
 					kd = atoi(coef);
 					if(debug == 1)
 					{
