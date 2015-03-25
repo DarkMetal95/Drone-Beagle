@@ -11,12 +11,12 @@
 
 typedef struct Sensors_values
 {
-	float gyroX;
-	float gyroY;
-	float gyroZ;
-	float accX;
-	float accY;
-	float accZ;
+	short gyroX;
+	short gyroY;
+	short gyroZ;
+	short accX;
+	short accY;
+	short accZ;
 } Sensors_values;
 
 /*
