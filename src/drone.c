@@ -211,6 +211,12 @@ int main()
 		exit(1);
 	}
 
+	if (mpu6050_init(i2c_device) != 0)
+	{
+		perror("An error occurred during MPU6050 setup\n");
+		exit(1);
+	}
+
 	/*
 	 * Init bluetooth
 	 */
@@ -224,8 +230,6 @@ int main()
 
 	kalman_init(&kalman_x);
 	kalman_init(&kalman_y);
-	x_angle_cons = 0;
-	y_angle_cons = 0;
 
 	// Wait 100 ms for sensor to stabilize
 	usleep(100000);
@@ -244,6 +248,9 @@ int main()
 	 * Init PID
 	 */
 	
+	x_angle_cons = 0;
+	y_angle_cons = 0;
+
 	kp = 300;
 	ki = 6;
 	kd = 500;
@@ -380,6 +387,8 @@ int main()
 
 		close(client);
 	}
+
+	i2c_close(i2c_device);
 
 	fclose(motor1);
 	fclose(motor2);

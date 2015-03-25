@@ -32,6 +32,12 @@ int main()
 		exit(1);
 	}
 
+	if (mpu6050_init(i2c_device) != 0)
+	{
+		perror("An error occurred during MPU6050 setup\n");
+		exit(1);
+	}
+
 	/*
 	 * Init Kalman filter
 	 */
@@ -93,4 +99,8 @@ int main()
 
 		usleep(2000);
 	}
+
+	i2c_close(i2c_device);
+
+	return 0;
 }

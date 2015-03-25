@@ -1,5 +1,4 @@
-#include <unistd.h>
-
+#include "../include/libi2c.h"
 #include "../include/libsensors.h"
 
 /*
@@ -7,65 +6,14 @@
  */
 void sensors_get_values(int device, Sensors_values *values)
 {
-	int buf[2];
+	unsigned char buf[14];
 
-	buf[0] = 0x3b;
-	write(device, buf, 1);
-	read(device, buf, 1);
-	values->accX = buf[0] * 256;
+	i2c_read_bytes(device, MPU6050_ADDR, MPU6050_START_ADDR_DATA, buf, 14);
 
-	buf[0] = 0x3c;
-	write(device, buf, 1);
-	read(device, buf, 1);
-	values->accX += buf[0];
-
-	buf[0] = 0x3d;
-	write(device, buf, 1);
-	read(device, buf, 1);
-	values->accY = buf[0] * 256;
-
-	buf[0] = 0x3e;
-	write(device, buf, 1);
-	read(device, buf, 1);
-	values->accY += buf[0];
-
-	buf[0] = 0x3f;
-	write(device, buf, 1);
-	read(device, buf, 1);
-	values->accZ = buf[0] * 256;
-
-	buf[0] = 0x40;
-	write(device, buf, 1);
-	read(device, buf, 1);
-	values->accZ += buf[0];
-
-	buf[0] = 0x43;
-	write(device, buf, 1);
-	read(device, buf, 1);
-	values->gyroX = buf[0] * 256;
-
-	buf[0] = 0x44;
-	write(device, buf, 1);
-	read(device, buf, 1);
-	values->gyroX += buf[0];
-
-	buf[0] = 0x45;
-	write(device, buf, 1);
-	read(device, buf, 1);
-	values->gyroY = buf[0] * 256;
-
-	buf[0] = 0x46;
-	write(device, buf, 1);
-	read(device, buf, 1);
-	values->gyroY += buf[0];
-
-	buf[0] = 0x47;
-	write(device, buf, 1);
-	read(device, buf, 1);
-	values->gyroZ = buf[0] * 256;
-
-	buf[0] = 0x48;
-	write(device, buf, 1);
-	read(device, buf, 1);
-	values->gyroZ += buf[0];
+	values->accX = (buf[0] << 8) | buf[1];
+	values->accY = (buf[2] << 8) | buf[3];
+	values->accZ = (buf[4] << 8) | buf[5];
+	values->gyroX = (buf[8] << 8) | buf[9];
+	values->gyroY = (buf[10] << 8) | buf[11];
+	values->gyroZ = (buf[12] << 8) | buf[13];
 }
